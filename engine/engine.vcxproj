@@ -83,7 +83,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\OpenGL_Configuration\glad\src\glad.c" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenGl\OpenGl.vcxproj">

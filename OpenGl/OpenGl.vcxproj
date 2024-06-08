@@ -55,6 +55,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>BUILD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>src;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -80,12 +81,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\OpenGL_Configuration\glad\src\glad.c" />
-    <ClCompile Include="src\opengl\opengl.cpp" />
+    <ClCompile Include="src\opengl\Buffer_Abstraction.cpp" />
+    <ClCompile Include="src\hzpch.cpp" />
+    <ClCompile Include="src\opengl\Shader.cpp" />
+    <ClCompile Include="src\opengl\Buffer.cpp" />
+    <ClCompile Include="src\opengl\App.cpp" />
+    <ClCompile Include="src\opengl\Window.cpp" />
+    <ClCompile Include="src\opengl\VertexArray.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\opengl\Buffer_Abstraction.h" />
+    <ClInclude Include="src\hzpch.h" />
+    <ClInclude Include="src\opengl\Shader.h" />
+    <ClInclude Include="src\opengl\Buffer.h" />
+    <ClInclude Include="src\opengl\App.h" />
     <ClInclude Include="src\opengl\core.h" />
     <ClInclude Include="src\include.h" />
-    <ClInclude Include="src\opengl\opengl.h" />
+    <ClInclude Include="src\opengl\main.h" />
+    <ClInclude Include="src\opengl\Window.h" />
+    <ClInclude Include="src\opengl\VertexArray.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

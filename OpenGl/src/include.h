@@ -1,2 +1,5 @@
 #pragma once
-#include"opengl/opengl.h"
+
+#include"opengl/Window.h"
+#include"opengl/App.h"
+#include"opengl/main.h"
