@@ -23,11 +23,12 @@ namespace Opengl {
 		static App* s_Instance;
 		Window m_Window;//¿‡∂‘œÛ
 
-		std::unique_ptr<Shader> m_Shader;
-		std::unique_ptr<VertexArray> m_VertexArray;
+		std::shared_ptr<Shader> m_Shader;
+		std::shared_ptr<VertexArray> m_VertexArray;
 
-		std::unique_ptr<Shader> m_BlueShader;
-		std::unique_ptr<VertexArray> m_SquareVA;
+		std::shared_ptr<Shader> m_BlueShader;
+		std::shared_ptr<VertexArray> m_SquareVA;
+
 	};
 	//App* createApp();
 }

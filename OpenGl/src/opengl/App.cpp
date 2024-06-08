@@ -1,79 +1,13 @@
 #include "App.h"
 
+#include"opengl/Renderer.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 
 namespace Opengl {
 	// settings
 
-	//const char* vertexShaderSource = "#version 330 core\n"
-	//	"layout (location = 0) in vec3 aPos;\n"
-	//	"void main()\n"
-	//	"{\n"
-	//	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	//	"}\0";
-	//const char* fragmentShaderSource = "#version 330 core\n"
-	//	"out vec4 FragColor;\n"
-	//	"void main()\n"
-	//	"{\n"
-	//	"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	//	"}\n\0";
-	std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec4 a_Color;
-			out vec3 v_Position;
-			out vec4 v_Color;
-			void main()
-			{
-				v_Position = a_Position;
-				v_Color = a_Color;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
-	std::string fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-			in vec3 v_Position;
-			in vec4 v_Color;
-			void main()
-			{
-				color = vec4(v_Position * 0.5 + 0.5, 1.0);
-				color = v_Color;
-			}
-		)";
-
-	std::string blueShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			out vec3 v_Position;
-			void main()
-			{
-				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
-
-	std::string blueShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-			in vec3 v_Position;
-			void main()
-			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
-			}
-		)";
-  //  float vertices[] = {
-		// 0.5f,  0.5f, 0.0f,  // top right
-		// 0.5f, -0.5f, 0.0f,  // bottom right
-		//-0.5f, -0.5f, 0.0f,  // bottom left
-		//-0.5f,  0.5f, 0.0f   // top left 
-  //  };
 	float vertices[3 * 7] = {//position + color
 			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
 			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
@@ -86,10 +20,6 @@ namespace Opengl {
 			-0.75f,  0.75f, 0.0f
 	};
 		
-	//unsigned int indices[] = {  // note that we start from 0!
- //       0, 1, 3,  // first Triangle
- //       1, 2, 3   // second Triangle
- //   };
 
 	unsigned int indices[3] = { 0, 1, 2 };
 
@@ -102,8 +32,8 @@ namespace Opengl {
         s_Instance = this;
 
 		//shader
-        m_Shader.reset(new Shader(vertexSrc, fragmentSrc));//设置智能指针指向的对象
-		m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+		m_Shader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\vs.vs", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\fs.fs"));//设置智能指针指向的对象
+		m_BlueShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Vertex_Shader.glsl", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Fragment_Shader.glsl"));
 		///////////////////////////////////////////////////////////////////////
 		/////Frist///////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////
@@ -123,7 +53,7 @@ namespace Opengl {
 
 		//m_IndexBuffer = std::make_unique<OpenGLIndexBuffer>(indices, sizeof(indices) / sizeof(unsigned int));
 		std::shared_ptr<IndexBuffer> indexBuffer;
-		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));//获取个数
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 		///////////////////////////////////////////////////////////////////////
 		/////Second///////////////////////////////////////////////////////////
@@ -154,12 +84,7 @@ namespace Opengl {
 	{
 		// glfw: terminate, clearing all previously allocated GLFW resources.
 		// ------------------------------------------------------------------
-        //glDeleteVertexArrays(1, &VAO);
-        //glDeleteBuffers(1, &VBO);
-        //glDeleteBuffers(1, &EBO);
-        //glDeleteProgram(shaderProgram);
 		m_Window.~Window();
-		//glfwTerminate();
 
 	}
 	void App::Run()
@@ -171,20 +96,30 @@ namespace Opengl {
 				glfwSetWindowShouldClose(m_Window.m_Window, true);
 
 			// ------
-			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
+			//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			//glClear(GL_COLOR_BUFFER_BIT);
 
+			Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+			Renderer::Clear();
 			// render
+			float timeValue = glfwGetTime();
+			float greenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
+			glm::vec4 result = glm::vec4(0.0f, greenValue, 0.0f, 1.0f);
 			m_BlueShader->Bind();
+			m_BlueShader->SetFloat4("ourColor", result);
+			//int vertexColorLocation = glGetUniformLocation(m_BlueShader->GetShaderProgram(), "ourColor");
+			//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
 			m_SquareVA->Bind();
 
-			glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::DrawIndexed(m_SquareVA);
+			//glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			//render
             m_Shader->Bind();
 			m_VertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-            glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-
+            //glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::DrawIndexed(m_VertexArray);
             // glBindVertexArray(0); // no need to unbind it every time 
 			m_Window.OnUpdate();
 		}

@@ -47,7 +47,7 @@
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(projectname)</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(projectname)</IntDir>
     <LibraryPath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\includes;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glad\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\includes;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glad\include;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glm;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -81,6 +81,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\OpenGL_Configuration\glad\src\glad.c" />
+    <ClCompile Include="src\opengl\Renderer.cpp" />
     <ClCompile Include="src\opengl\Buffer_Abstraction.cpp" />
     <ClCompile Include="src\hzpch.cpp" />
     <ClCompile Include="src\opengl\Shader.cpp" />
@@ -90,6 +91,7 @@
     <ClCompile Include="src\opengl\VertexArray.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\opengl\Renderer.h" />
     <ClInclude Include="src\opengl\Buffer_Abstraction.h" />
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="src\opengl\Shader.h" />
@@ -100,6 +102,12 @@
     <ClInclude Include="src\opengl\main.h" />
     <ClInclude Include="src\opengl\Window.h" />
     <ClInclude Include="src\opengl\VertexArray.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader\blue_Fragment_Shader.glsl" />
+    <None Include="src\shader\blue_Vertex_Shader.glsl" />
+    <None Include="src\shader\fs.fs" />
+    <None Include="src\shader\vs.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

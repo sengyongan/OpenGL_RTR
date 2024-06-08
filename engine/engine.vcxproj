@@ -46,8 +46,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(projectname)</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(Configuration)-$(Platform)\$(projectname)</IntDir>
-    <LibraryPath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\includes;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glad\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\lib;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glm;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\OpenGL\includes;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glad\include;D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGl\vendor\glm;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
