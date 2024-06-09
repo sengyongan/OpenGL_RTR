@@ -6,7 +6,7 @@
 
 #include"Shader.h"
 #include"Buffer.h"
-#include"opengl/Buffer_Abstraction.h"
+#include"Buffer_Abstraction.h"
 #include"VertexArray.h"
 
 namespace Opengl {

@@ -1,4 +1,4 @@
-#include "App.h"
+#include "opengl/App.h"
 
 #include"opengl/Renderer.h"
 
@@ -20,7 +20,7 @@ namespace Opengl {
 			-0.75f,  0.75f, 0.0f
 	};
 		
-
+	//¶¥µã×ÜÊý
 	unsigned int indices[3] = { 0, 1, 2 };
 
 	unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
