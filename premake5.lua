@@ -37,6 +37,7 @@ project "OpenGl"--项目
         "%{prj.name}/vendor/OpenGL/lib",
         "%{prj.name}/vendor/glm",
         "%{prj.name}/vendor/glad/include",
+        "%{prj.name}/vendor/stb_image",
         "OpenGL/src"
     }
 

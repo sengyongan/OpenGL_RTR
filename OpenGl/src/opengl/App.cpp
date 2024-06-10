@@ -5,21 +5,22 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+
 namespace Opengl {
 	// settings
 
 	float vertices[3 * 7] = {//position + color
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+		-0.5f, -0.5f, 0.0f,		0.8f, 0.2f, 0.8f, 1.0f,
+		 0.5f, -0.5f, 0.0f,		0.2f, 0.3f, 0.8f, 1.0f,
+		 0.0f,  0.5f, 0.0f,		0.8f, 0.8f, 0.2f, 1.0f
 	};
-	float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
+	float squareVertices[] = {//position + texture左下，右下，右上，左上
+		-0.75f, -0.75f, 0.0f,	0.0f, 0.0f,
+		 0.75f, -0.75f, 0.0f,	1.0f, 0.0f,
+		 0.75f,  0.75f, 0.0f,	1.0f, 1.0f,
+		-0.75f,  0.75f, 0.0f,	0.0f, 1.0f
 	};
-		
+
 	//顶点总数
 	unsigned int indices[3] = { 0, 1, 2 };
 
@@ -29,11 +30,18 @@ namespace Opengl {
 
 	App::App()
 	{
+		//init
         s_Instance = this;
+		m_Window.Init();
 
 		//shader
 		m_Shader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\vs.vs", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\fs.fs"));//设置智能指针指向的对象
 		m_BlueShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Vertex_Shader.glsl", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Fragment_Shader.glsl"));
+		
+		//texture
+		m_Texture = std::make_unique<Texture>("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\assest\\textures\\container.jpg");
+		m_Texture_Bround = std::make_unique<Texture>("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\assest\\textures\\awesomeface.png");
+		
 		///////////////////////////////////////////////////////////////////////
 		/////Frist///////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////
@@ -65,9 +73,12 @@ namespace Opengl {
 		std::shared_ptr<VertexBuffer> squareVB;
 		squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
-		squareVB->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" }
-			});
+		squareVB->SetLayout(
+			{
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" }
+			}
+		);
 
 		m_SquareVA->AddVertexBuffer(squareVB);
 
@@ -75,10 +86,12 @@ namespace Opengl {
 		squareIB.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
 
 		m_SquareVA->SetIndexBuffer(squareIB);
-        // ------------------------------------------------------------------
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glBindVertexArray(0);
+        // glsl------------------------------------------------------------------
+		m_BlueShader->Bind();
+		m_BlueShader->SetInt("texture1", 0);
+		m_BlueShader->SetInt("texture2", 1);
+		
 	}
 	App::~App()
 	{
@@ -96,31 +109,35 @@ namespace Opengl {
 				glfwSetWindowShouldClose(m_Window.m_Window, true);
 
 			// ------
-			//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-			//glClear(GL_COLOR_BUFFER_BIT);
-
 			Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 			Renderer::Clear();
-			// render
+
+			// render方形
 			float timeValue = glfwGetTime();
 			float greenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 			glm::vec4 result = glm::vec4(0.0f, greenValue, 0.0f, 1.0f);
+			
+			glActiveTexture(GL_TEXTURE0);
+			m_Texture->Bind();
+			glActiveTexture(GL_TEXTURE1);
+			m_Texture_Bround->Bind();
+
 			m_BlueShader->Bind();
 			m_BlueShader->SetFloat4("ourColor", result);
-			//int vertexColorLocation = glGetUniformLocation(m_BlueShader->GetShaderProgram(), "ourColor");
-			//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
 			m_SquareVA->Bind();
 
-			Renderer::DrawIndexed(m_SquareVA);
-			//glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
-			//render
+			Renderer::DrawIndexed(m_SquareVA);
+
+			//render////////////////////
+
+			//三角形
             m_Shader->Bind();
 			m_VertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-            //glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 			Renderer::DrawIndexed(m_VertexArray);
-            // glBindVertexArray(0); // no need to unbind it every time 
+
+			//
 			m_Window.OnUpdate();
 		}
 	}

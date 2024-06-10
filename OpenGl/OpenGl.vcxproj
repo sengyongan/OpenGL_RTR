@@ -59,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -82,7 +82,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -116,6 +116,7 @@
     <ClInclude Include="src\opengl\Window.h" />
     <ClInclude Include="src\opengl\core.h" />
     <ClInclude Include="src\opengl\main.h" />
+    <ClInclude Include="src\opengl\Texture.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
@@ -542,6 +543,7 @@
     <ClCompile Include="src\opengl\Shader.cpp" />
     <ClCompile Include="src\opengl\VertexArray.cpp" />
     <ClCompile Include="src\opengl\Window.cpp" />
+    <ClCompile Include="src\opengl\Texture.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -8,6 +8,7 @@
 #include"Buffer.h"
 #include"Buffer_Abstraction.h"
 #include"VertexArray.h"
+#include"Texture.h"
 
 namespace Opengl {
 	
@@ -29,6 +30,9 @@ namespace Opengl {
 		std::shared_ptr<Shader> m_BlueShader;
 		std::shared_ptr<VertexArray> m_SquareVA;
 
+		//
+		std::shared_ptr<Texture> m_Texture;
+		std::shared_ptr<Texture> m_Texture_Bround;
+
 	};
-	//App* createApp();
 }

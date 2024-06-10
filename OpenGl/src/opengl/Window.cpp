@@ -11,7 +11,6 @@ namespace Opengl {
 
     Opengl::Window::Window()
     {
-        Window::Init();
     }
     Window::~Window()
     {
