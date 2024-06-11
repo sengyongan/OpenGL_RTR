@@ -25,13 +25,19 @@ namespace Opengl {
 	//unsigned int indices[3] = { 0, 1, 2 };
 
 	//unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-
+	App* App::s_Instance = nullptr;
 
 	App::App()
 	{
 		//init
-		m_Window.Init();
+		s_Instance = this;
+
+		m_Window = std::make_unique<Window>();
+		//m_Window = new Window();
+		m_Window->Init();
 		Renderer::init();
+		m_EditorCamera = std::make_unique<EditorCamera>(30.0f, 1.778f, 0.1f, 1000.0f);
+
 		//shader
 		//m_Shader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\vs.vs", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\fs.fs"));//设置智能指针指向的对象
 		//m_BlueShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Vertex_Shader.glsl", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Fragment_Shader.glsl"));
@@ -95,17 +101,16 @@ namespace Opengl {
 	{
 		// glfw: terminate, clearing all previously allocated GLFW resources.
 		// ------------------------------------------------------------------
-		m_Window.~Window();
+		m_Window->~Window();
 
 	}
 	void App::Run()
 	{
-		while(!glfwWindowShouldClose(m_Window.m_Window)){
+		while(!glfwWindowShouldClose(m_Window->GetNativeWindow())){
 
             // input
-			if (glfwGetKey(m_Window.m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-				glfwSetWindowShouldClose(m_Window.m_Window, true);
-
+			//if (glfwGetKey(m_Window->m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			//	glfwSetWindowShouldClose(m_Window->GetNativeWindow(), true);
 			// ------
 			Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 			Renderer::Clear();
@@ -119,7 +124,8 @@ namespace Opengl {
 			//m_Texture->Bind();
 			//glActiveTexture(GL_TEXTURE1);
 			//m_Texture_Bround->Bind();
-
+			m_EditorCamera->OnUpdate();
+			Renderer::BeginScene(*m_EditorCamera);
 			//m_BlueShader->Bind();
 			//m_BlueShader->SetFloat4("ourColor", result);
 
@@ -150,7 +156,7 @@ namespace Opengl {
 			//Renderer::DrawIndexed(m_VertexArray);
 			Renderer::EndScene();
 			//
-			m_Window.OnUpdate();
+			m_Window->OnUpdate();
 		}
 	}
 }

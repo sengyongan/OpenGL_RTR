@@ -1,6 +1,4 @@
 #include "Window.h"
-#include "Window.h"
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -9,9 +7,10 @@ namespace Opengl {
     const unsigned int SCR_HEIGHT = 600;
 
 
-    Opengl::Window::Window()
+    Window::Window()
     {
     }
+
     Window::~Window()
     {
         Window::Ondestory();
@@ -21,7 +20,6 @@ namespace Opengl {
         // glfw: initialize and configure初始化glfw
         // ------------------------------
         glfwInit();
-        isRunning = true;
         // glfw window creation创建窗口
         // --------------------
         m_Window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "senlongan_OpenGL_demo", NULL, NULL);
@@ -31,6 +29,7 @@ namespace Opengl {
             glfwTerminate();//终止使用 OpenGL 或 Vulkan 的应用程序
         }
         glfwMakeContextCurrent(m_Window);//传入窗口上下文
+        //callbake
         glfwSetFramebufferSizeCallback(m_Window, framebuffer_size_callback);//设置回调函数，可以调整窗口大小
         processInput(m_Window);
 
@@ -46,14 +45,11 @@ namespace Opengl {
     {
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        if (glfwGetKey(m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(m_Window, true);
+        //if (glfwGetKey(m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        //    glfwSetWindowShouldClose(m_Window, true);
 
         glfwSwapBuffers(m_Window);
-        glfwPollEvents();
-
-
-
+        glfwPollEvents();//检测callback事件
     }
 
     void Window::Ondestory()
@@ -71,6 +67,7 @@ namespace Opengl {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
     }
+
 
     // glfw: whenever the window size changed (by OS or user resize) this callback function executes
     // ---------------------------------------------------------------------------------------------

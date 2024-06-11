@@ -19,13 +19,15 @@ namespace Opengl {
 		void OnUpdate();
 		void Ondestory();
 		
-		GLFWwindow* m_Window;
+		GLFWwindow* GetNativeWindow() const { return m_Window; }
+
 
 	public:
 		static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 		static void processInput(GLFWwindow* window);
+
 	public:
-		bool isRunning = true;
+		GLFWwindow* m_Window;//Êµ¼Ê´°¿Ú
 
 	};
 }

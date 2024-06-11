@@ -3,6 +3,7 @@
 #include"Shader.h"
 #include"Texture.h"
 
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 //temp
@@ -97,9 +98,14 @@ namespace Opengl {
 	};
 	static RendererData s_Data;
 
-	void Renderer::BeginScene()
+	void Renderer::BeginScene(const EditorCamera& camera)
 	{
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.TrianglesShader->Bind();
+		s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 	}
+
 	void Renderer::init()
 	{
 		s_Data.QuadShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Vertex_Shader.glsl", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Fragment_Shader.glsl"));
@@ -169,18 +175,17 @@ namespace Opengl {
 		s_Data.QuadTexture2->Bind();
 		//
 		glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		glm::mat4 view = glm::mat4(1.0f);
-		glm::mat4 projection = glm::mat4(1.0f);
+		//glm::mat4 view = glm::mat4(1.0f);
+		//glm::mat4 projection = glm::mat4(1.0f);
 		//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
+		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		//projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
 
 		//
 		s_Data.QuadShader->Bind();
 
-		//s_Data.QuadShader->SetMat4("model", model);
-		s_Data.QuadShader->SetMat4("view", view);
-		s_Data.QuadShader->SetMat4("projection", projection);
+		//s_Data.QuadShader->SetMat4("view", view);
+		//s_Data.QuadShader->SetMat4("projection", projection);
 
 		s_Data.QuadShader->SetFloat4("ourColor", result);
 
@@ -208,18 +213,18 @@ namespace Opengl {
 		//Èý½ÇÐÎ
 		// create transformations
 		glm::mat4 model1 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		glm::mat4 view1 = glm::mat4(1.0f);
+		//glm::mat4 view1 = glm::mat4(1.0f);
 
 		model = glm::rotate(model1, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::translate(model1, glm::vec3(0.0f, 0.0f, -5.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
+		//view = glm::translate(model1, glm::vec3(0.0f, 0.0f, -5.0f));
+		//projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
 
 
 		s_Data.TrianglesShader->Bind();
 
 		s_Data.TrianglesShader->SetMat4("model", model);
-		s_Data.TrianglesShader->SetMat4("view", view);
-		s_Data.TrianglesShader->SetMat4("projection", projection);
+		//s_Data.TrianglesShader->SetMat4("view", view);
+		//s_Data.TrianglesShader->SetMat4("projection", projection);
 
 		s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
@@ -228,17 +233,17 @@ namespace Opengl {
 
 		//
 		glm::mat4 model2 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		glm::mat4 view2 = glm::mat4(1.0f);
+		//glm::mat4 view2 = glm::mat4(1.0f);
 
 		model = glm::rotate(model2, glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::translate(view2, glm::vec3(0.0f, 0.0f, -5.0f));
+		//view = glm::translate(view2, glm::vec3(0.0f, 0.0f, -5.0f));
 
 
 		s_Data.TrianglesShader->Bind();
 
 		s_Data.TrianglesShader->SetMat4("model", model);
-		s_Data.TrianglesShader->SetMat4("view", view);
-		s_Data.TrianglesShader->SetMat4("projection", projection);
+		//s_Data.TrianglesShader->SetMat4("view", view);
+		//s_Data.TrianglesShader->SetMat4("projection", projection);
 
 		s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		Renderer::DrawIndexed(s_Data.TrianglesVertexArray);

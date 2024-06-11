@@ -1318,6 +1318,8 @@
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\Texture.h" />
+    <ClInclude Include="src\opengl\EditorCamera.h" />
+    <ClInclude Include="src\opengl\Input.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1348,5 +1350,7 @@
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\Texture.cpp" />
+    <ClCompile Include="src\opengl\EditorCamera.cpp" />
+    <ClCompile Include="src\opengl\Input.cpp" />
   </ItemGroup>
 </Project>
