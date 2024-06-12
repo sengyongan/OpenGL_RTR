@@ -12,8 +12,8 @@
 namespace Opengl {
     // camera
     // timing
-    float deltaTime = 0.0f;	// time between current frame and last frame
-    float lastFrame = 0.0f;
+    //float deltaTime = 0.0f;	// time between current frame and last frame
+    //float lastFrame = 0.0f;
 
     EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
         : m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip),
@@ -64,12 +64,9 @@ namespace Opengl {
         return speed;
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    void EditorCamera::OnUpdate()
+    void EditorCamera::OnUpdate(float deltaTime)
     {
         // ts
-        float currentFrame = static_cast<float>(glfwGetTime());//获取当前时间
-        deltaTime = currentFrame - lastFrame;//时差（=当前 - 上一帧）
-        lastFrame = currentFrame;//上一帧
         // --------------------
         //
         if (Input::IsKeyPressed(GLFW_KEY_LEFT_ALT))//按住alt

@@ -8,6 +8,9 @@
 
 namespace Opengl {
 	// settings
+	// timing
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
 
 	//float vertices[3 * 7] = {//position + color
 	//	-0.5f, -0.5f, 0.0f,		0.8f, 0.2f, 0.8f, 1.0f,
@@ -107,6 +110,10 @@ namespace Opengl {
 	void App::Run()
 	{
 		while(!glfwWindowShouldClose(m_Window->GetNativeWindow())){
+			// ts
+			float currentFrame = static_cast<float>(glfwGetTime());//获取当前时间
+			deltaTime = currentFrame - lastFrame;//时差（=当前 - 上一帧）
+			lastFrame = currentFrame;//上一帧
 
             // input
 			//if (glfwGetKey(m_Window->m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -124,7 +131,7 @@ namespace Opengl {
 			//m_Texture->Bind();
 			//glActiveTexture(GL_TEXTURE1);
 			//m_Texture_Bround->Bind();
-			m_EditorCamera->OnUpdate();
+			m_EditorCamera->OnUpdate(deltaTime);
 			Renderer::BeginScene(*m_EditorCamera);
 			//m_BlueShader->Bind();
 			//m_BlueShader->SetFloat4("ourColor", result);

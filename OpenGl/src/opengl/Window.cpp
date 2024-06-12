@@ -31,7 +31,6 @@ namespace Opengl {
         glfwMakeContextCurrent(m_Window);//传入窗口上下文
         //callbake
         glfwSetFramebufferSizeCallback(m_Window, framebuffer_size_callback);//设置回调函数，可以调整窗口大小
-        processInput(m_Window);
 
         // glad: load all OpenGL function pointers
         // ---------------------------------------
@@ -47,6 +46,7 @@ namespace Opengl {
         // -------------------------------------------------------------------------------
         //if (glfwGetKey(m_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         //    glfwSetWindowShouldClose(m_Window, true);
+        processInput(m_Window);
 
         glfwSwapBuffers(m_Window);
         glfwPollEvents();//检测callback事件

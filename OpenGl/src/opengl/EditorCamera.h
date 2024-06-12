@@ -13,7 +13,7 @@ namespace Opengl {
         EditorCamera() = default;
         EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);//传入到m_ProMatrix
         //
-        void OnUpdate();
+        void OnUpdate(float deltaTime);
 
         //位置
         inline float GetDistance() const { return m_Distance; }

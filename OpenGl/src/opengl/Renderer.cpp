@@ -3,6 +3,7 @@
 #include"Shader.h"
 #include"Texture.h"
 
+#include"App.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -24,38 +25,38 @@ namespace Opengl {
 		 0.75f,  0.75f, 0.0f,	1.0f, 1.0f,
 		-0.75f,  0.75f, 0.0f,	0.0f, 1.0f
 	};
+	//postion, TexCoord, normal
 	float cube_Vertices[] = {//后，前，左，右，下，上（左下，右下，右上，右上，左上，左下）
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,  0.0f, -1.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f,  1.0f,
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f
 	};
-
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -125,7 +126,8 @@ namespace Opengl {
 		squareVB->SetLayout(
 			{
 				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float2, "a_TexCoord" }
+				{ ShaderDataType::Float2, "a_TexCoord" },
+				{ ShaderDataType::Float3, "a_Normal" },
 			}
 		);
 
@@ -166,8 +168,9 @@ namespace Opengl {
 	{		
 		// render方形
 		float timeValue = glfwGetTime();
-		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
-		glm::vec4 result = glm::vec4(0.0f, greenValue, 0.0f, 1.0f);
+		float blueValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
+		glm::vec4 result = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+
 		//
 		glActiveTexture(GL_TEXTURE0);
 		s_Data.QuadTexture1->Bind();
@@ -188,16 +191,16 @@ namespace Opengl {
 		//s_Data.QuadShader->SetMat4("projection", projection);
 
 		s_Data.QuadShader->SetFloat4("ourColor", result);
+		s_Data.QuadShader->SetFloat3("viewPos", App::Get().GetCamera().GetPosition());
 
 		s_Data.QuadVertexArray->Bind();
 		//
 		for (unsigned int i = 0; i < 10; i++)
 		{
-			glm::mat4 model5;
-			model5 = glm::translate(model, cubePositions[i]);
+			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
 			float angle = 20.0f * i+1;
-			model5 = glm::rotate(model5, glm::radians(40.0f) * (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
-			s_Data.QuadShader->SetMat4("model", model5);
+			model = glm::rotate(model, glm::radians(40.0f) * (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
+			s_Data.QuadShader->SetMat4("model", model);
 
 			Renderer::DrawIndexed(s_Data.QuadVertexArray);
 			//glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -212,10 +215,12 @@ namespace Opengl {
 
 		//三角形
 		// create transformations
-		glm::mat4 model1 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+		//glm::mat4 model1 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 		//glm::mat4 view1 = glm::mat4(1.0f);
 
-		model = glm::rotate(model1, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
+		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
 		//view = glm::translate(model1, glm::vec3(0.0f, 0.0f, -5.0f));
 		//projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
 
@@ -230,23 +235,6 @@ namespace Opengl {
 		Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
 		
 		s_Data.TrianglesShader->Unbind();
-
-		//
-		glm::mat4 model2 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		//glm::mat4 view2 = glm::mat4(1.0f);
-
-		model = glm::rotate(model2, glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//view = glm::translate(view2, glm::vec3(0.0f, 0.0f, -5.0f));
-
-
-		s_Data.TrianglesShader->Bind();
-
-		s_Data.TrianglesShader->SetMat4("model", model);
-		//s_Data.TrianglesShader->SetMat4("view", view);
-		//s_Data.TrianglesShader->SetMat4("projection", projection);
-
-		s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
 
 
 	}
