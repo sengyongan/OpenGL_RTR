@@ -34,6 +34,9 @@
     <Filter Include="vendor\glm\glm\gtx">
       <UniqueIdentifier>{B3A6A76B-9F8A-68C1-08EB-6214F4ED5243}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\textures">
+      <UniqueIdentifier>{5982a962-3950-45aa-b5b8-e6c2a8195102}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\hzpch.h">
@@ -1317,9 +1320,15 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Texture.h" />
-    <ClInclude Include="src\opengl\EditorCamera.h" />
-    <ClInclude Include="src\opengl\Input.h" />
+    <ClInclude Include="src\opengl\EditorCamera.h">
+      <Filter>src\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\Input.h">
+      <Filter>src\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\Texture.h">
+      <Filter>src\textures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1349,8 +1358,14 @@
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Texture.cpp" />
-    <ClCompile Include="src\opengl\EditorCamera.cpp" />
-    <ClCompile Include="src\opengl\Input.cpp" />
+    <ClCompile Include="src\opengl\EditorCamera.cpp">
+      <Filter>src\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\Input.cpp">
+      <Filter>src\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\Texture.cpp">
+      <Filter>src\textures</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

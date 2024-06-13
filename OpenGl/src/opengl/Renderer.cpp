@@ -90,6 +90,7 @@ namespace Opengl {
 		std::shared_ptr<Shader> QuadShader;
 		std::shared_ptr<Texture> QuadTexture1;
 		std::shared_ptr<Texture> QuadTexture2;
+		std::shared_ptr<Texture> QuadTexture3;
 
 		std::shared_ptr<VertexArray> TrianglesVertexArray;
 		std::shared_ptr<VertexBuffer> TrianglesVertexBuffer;
@@ -109,11 +110,12 @@ namespace Opengl {
 
 	void Renderer::init()
 	{
-		s_Data.QuadShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Vertex_Shader.glsl", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\blue_Fragment_Shader.glsl"));
-		s_Data.TrianglesShader.reset(new Shader("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\vs.vs", "D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\shader\\fs.fs"));//设置智能指针指向的对象
+		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/blue_Vertex_Shader.glsl", "../OpenGl/src/shader/blue_Fragment_Shader.glsl"));
+		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/vs.vs", "../OpenGl/src/shader/fs.fs"));//设置智能指针指向的对象
 		//
-		s_Data.QuadTexture1 = std::make_unique<Texture>("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\assest\\textures\\container.jpg");
-		s_Data.QuadTexture2 = std::make_unique<Texture>("D:\\OpenGL_C++_Demo\\OpenGl_Demo\\OpenGl\\src\\assest\\textures\\awesomeface.png");
+		s_Data.QuadTexture1 = std::make_unique<Texture>("../OpenGl/src/assest/textures/container2.png");
+		s_Data.QuadTexture2 = std::make_unique<Texture>("../OpenGl/src/assest/textures/ChernoLogo.png");
+		s_Data.QuadTexture3 = std::make_unique<Texture>("../OpenGl/src/assest/textures/container2_specular.png");
 
 		///////////////////////////////////////////////////////////////////////
 		/////Quad///////////////////////////////////////////////////////////
@@ -163,6 +165,7 @@ namespace Opengl {
 		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->SetInt("texture1", 0);
 		s_Data.QuadShader->SetInt("texture2", 1);
+		s_Data.QuadShader->SetInt("specular_Texture", 2);
 	}
 	void Renderer::EndScene()
 	{		
@@ -176,6 +179,8 @@ namespace Opengl {
 		s_Data.QuadTexture1->Bind();
 		glActiveTexture(GL_TEXTURE1);
 		s_Data.QuadTexture2->Bind();
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.QuadTexture3->Bind();
 		//
 		glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 		//glm::mat4 view = glm::mat4(1.0f);
@@ -189,9 +194,16 @@ namespace Opengl {
 
 		//s_Data.QuadShader->SetMat4("view", view);
 		//s_Data.QuadShader->SetMat4("projection", projection);
+		s_Data.QuadShader->SetFloat3("light.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.QuadShader->SetFloat3("light.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.QuadShader->SetFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.QuadShader->SetFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
 
 		s_Data.QuadShader->SetFloat4("ourColor", result);
 		s_Data.QuadShader->SetFloat3("viewPos", App::Get().GetCamera().GetPosition());
+		s_Data.QuadShader->SetFloat("light.constant", 1.0f);
+		s_Data.QuadShader->SetFloat("light.linear", 0.09f);
+		s_Data.QuadShader->SetFloat("light.quadratic", 0.032f);
 
 		s_Data.QuadVertexArray->Bind();
 		//
@@ -206,6 +218,10 @@ namespace Opengl {
 			//glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		//
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f,1.0f,20.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.QuadShader->SetMat4("model", model);
+		Renderer::DrawIndexed(s_Data.QuadVertexArray);
 
 		//Renderer::DrawIndexed(s_Data.QuadVertexArray);
 

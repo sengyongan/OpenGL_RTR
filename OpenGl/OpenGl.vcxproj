@@ -46,6 +46,7 @@
     <IntDir>..\bin-int\Debug-windows-x86_64\OpenGl\</IntDir>
     <TargetName>OpenGl</TargetName>
     <TargetExt>.dll</TargetExt>
+    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGL\src\assest\textures;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
