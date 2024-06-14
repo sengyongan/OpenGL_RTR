@@ -54,7 +54,8 @@ void main()
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64);
     vec3 specular = specularStrength * spec * lightColor * vec3(texture(specular_Texture, v_TexCoord));  
-
+    
+    //
     float theta = dot(lightDir, normalize(-light.camera_Direction)); 
     float epsilon   = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);    

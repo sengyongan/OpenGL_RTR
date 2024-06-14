@@ -14,7 +14,7 @@ namespace Opengl {
 		void Run();
 
 		static App& Get() { return *s_Instance; }
-		Window& GetWindow() { return  *m_Window; }
+		Window& GetWindow() { return  *m_Window; }//返回类对象指针的引用，防止发生拷贝
 		EditorCamera& GetCamera() { return *m_EditorCamera; }
 
 	private:
