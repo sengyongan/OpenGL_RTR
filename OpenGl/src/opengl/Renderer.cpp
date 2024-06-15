@@ -4,6 +4,7 @@
 #include"Texture.h"
 
 #include"App.h"
+#include"Model.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -156,7 +157,9 @@ namespace Opengl {
 		std::shared_ptr<VertexBuffer> whilte_CubeVertexBuffer;
 		std::shared_ptr<Shader> whilte_CubeShader;
 		std::vector<glm::vec3> lightColors;
-
+		//modle
+		std::shared_ptr<Shader> ModelShader;
+		std::shared_ptr<Model> m_Model;
 	};
 	static RendererData s_Data;
 
@@ -170,6 +173,8 @@ namespace Opengl {
 		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.whilte_CubeShader->Bind();
 		s_Data.whilte_CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.ModelShader->Bind();
+		s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 	}
 
 	void Renderer::init()
@@ -178,10 +183,18 @@ namespace Opengl {
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
 		s_Data.whilte_CubeShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
+		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
 		//
-		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/src/assest/textures/container2.png");
-		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/src/assest/textures/ChernoLogo.png");
-		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/src/assest/textures/container2_specular.png");
+		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
+		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
+		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
+		//
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
+		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
+
 		///////////////////////////////////////////////////////////////////////
 		/////quad///////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////
@@ -293,23 +306,18 @@ namespace Opengl {
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
-		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
-		//view = glm::translate(model1, glm::vec3(0.0f, 0.0f, -5.0f));
-		//projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
+		//model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
+		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
 
+		//s_Data.TrianglesShader->Bind();
 
-		s_Data.TrianglesShader->Bind();
+		//s_Data.TrianglesShader->SetMat4("model", model);
 
-		s_Data.TrianglesShader->SetMat4("model", model);
-		//s_Data.TrianglesShader->SetMat4("view", view);
-		//s_Data.TrianglesShader->SetMat4("projection", projection);
-
-		s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
-		
-		s_Data.TrianglesShader->Unbind();
+		//s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+		//Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
+		//
+		//s_Data.TrianglesShader->Unbind();
 		// cube//////////////////////////////////////////////////////////////////////////////
 		// cube//////////////////////////////////////////////////////////////////////////////
 		// cube//////////////////////////////////////////////////////////////////////////////
@@ -406,6 +414,60 @@ namespace Opengl {
 		Renderer::DrawIndexed(s_Data.CubeVertexArray);
 
 		s_Data.CubeShader->Unbind();
+
+		//modle//////////////////////////////////////////////////////////////////////////////////
+		//modle//////////////////////////////////////////////////////////////////////////////////
+		//modle//////////////////////////////////////////////////////////////////////////////////
+		s_Data.ModelShader->Bind();
+
+		//
+		s_Data.ModelShader->SetFloat("shininess", 32.0f);
+		//
+		s_Data.ModelShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.ModelShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.ModelShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.ModelShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.ModelShader->SetFloat("constVal.quadratic", 0.032f);
+		//
+
+		// directional light
+		s_Data.ModelShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.ModelShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.05f, 0.05f, 0.05f));
+		//s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		//s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// point light 1
+		for (int i = 0; i < 10; i++) {
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+
+			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.2f, 0.2f, 0.2f));
+			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(0.2f, 0.2f, 0.2f));
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
+
+		// spotLight
+
+		s_Data.ModelShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.ModelShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.ModelShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		s_Data.ModelShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.ModelShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+
+
+		//
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+		model = glm::translate(model, glm::vec3(10.0f, 0.0f, 0.0f)); 
+		s_Data.ModelShader->SetMat4("model", model);
+
+		s_Data.m_Model->Draw(*(s_Data.ModelShader));
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{

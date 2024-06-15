@@ -46,7 +46,6 @@
     <IntDir>..\bin-int\Debug-windows-x86_64\OpenGl\</IntDir>
     <TargetName>OpenGl</TargetName>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>D:\OpenGL_C++_Demo\OpenGl_Demo\OpenGL\src\assest\textures;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -60,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -70,8 +69,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\OpenGL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Debug-windows-x86_64\OpenGl\OpenGl.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
@@ -83,7 +82,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -97,8 +96,8 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\OpenGL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Release-windows-x86_64\OpenGl\OpenGl.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
@@ -106,20 +105,22 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\opengl\Input.h" />
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="src\include.h" />
     <ClInclude Include="src\opengl\App.h" />
     <ClInclude Include="src\opengl\Buffer.h" />
     <ClInclude Include="src\opengl\Buffer_Abstraction.h" />
     <ClInclude Include="src\opengl\EditorCamera.h" />
+    <ClInclude Include="src\opengl\Input.h" />
+    <ClInclude Include="src\opengl\Mesh.h" />
+    <ClInclude Include="src\opengl\Model.h" />
     <ClInclude Include="src\opengl\Renderer.h" />
     <ClInclude Include="src\opengl\Shader.h" />
+    <ClInclude Include="src\opengl\Texture.h" />
     <ClInclude Include="src\opengl\VertexArray.h" />
     <ClInclude Include="src\opengl\Window.h" />
     <ClInclude Include="src\opengl\core.h" />
     <ClInclude Include="src\opengl\main.h" />
-    <ClInclude Include="src\opengl\Texture.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
@@ -538,18 +539,22 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\opengl\Input.cpp" />
     <ClCompile Include="src\hzpch.cpp" />
     <ClCompile Include="src\opengl\App.cpp" />
     <ClCompile Include="src\opengl\Buffer.cpp" />
     <ClCompile Include="src\opengl\Buffer_Abstraction.cpp" />
     <ClCompile Include="src\opengl\EditorCamera.cpp" />
+    <ClCompile Include="src\opengl\Input.cpp" />
     <ClCompile Include="src\opengl\Renderer.cpp" />
     <ClCompile Include="src\opengl\Shader.cpp" />
+    <ClCompile Include="src\opengl\Texture.cpp" />
     <ClCompile Include="src\opengl\VertexArray.cpp" />
     <ClCompile Include="src\opengl\Window.cpp" />
-    <ClCompile Include="src\opengl\Texture.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader\model_Fragment_Shader.glsl" />
+    <None Include="src\shader\model_Vertex_Shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

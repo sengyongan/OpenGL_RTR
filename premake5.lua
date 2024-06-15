@@ -28,9 +28,9 @@ project "OpenGl"--项目
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
 		"%{prj.name}/vendor/glm/glm/**.inl",
-		"%{prj.name}/vendor/glad/src/glad.c",
+		"%{prj.name}/vendor/glad/src/glad.c"
     }
-
+    
     includedirs
     {
         "%{prj.name}/vendor/OpenGL/includes",
@@ -38,18 +38,21 @@ project "OpenGl"--项目
         "%{prj.name}/vendor/glm",
         "%{prj.name}/vendor/glad/include",
         "%{prj.name}/vendor/stb_image",
+        "%{prj.name}/vendor/assimp/include",
         "OpenGL/src"
     }
 
     libdirs
     {
-        "OpenGL/vendor/OpenGL/lib"    
+        "OpenGL/vendor/OpenGL/lib",
+        "OpenGL/vendor/assimp/lib"
     }
 
     links 
 	{ 
         "glfw3",
-		"opengl32.lib"
+		"opengl32.lib",
+		"assimp-vc143-mtd.lib"
 	}
     --Windows --------------------------------
     filter "system:windows"--仅针对window平台
@@ -95,18 +98,21 @@ project "engine"--项目
         "OpenGL/vendor/OpenGL/includes",
         "OpenGL/vendor/glm",
         "OpenGL/vendor/Glad/include",
+        "OpenGL/vendor/assimp/include",
         "OpenGL/src"
     }
 
     libdirs
     {
-        "OpenGL/vendor/OpenGL/lib"    
+        "OpenGL/vendor/OpenGL/lib",
+        "OpenGL/vendor/assimp/lib" 
     }
 
     links
     {
         "glfw3",
-        "OpenGL"
+        "OpenGL",
+        "assimp-vc143-mtd.lib"
     }
     --Windows --------------------------------
     filter "system:windows"--仅针对window平台
