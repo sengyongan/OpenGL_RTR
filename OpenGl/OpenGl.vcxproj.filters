@@ -42,40 +42,46 @@
     <ClInclude Include="src\include.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\App.h">
+    <ClInclude Include="src\opengl\core\App.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Buffer.h">
+    <ClInclude Include="src\opengl\renderer\Buffer.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Buffer_Abstraction.h">
+    <ClInclude Include="src\opengl\renderer\Buffer_Abstraction.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\EditorCamera.h">
+    <ClInclude Include="src\opengl\core\EditorCamera.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Input.h">
+    <ClInclude Include="src\opengl\core\Input.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Renderer.h">
+    <ClInclude Include="src\opengl\draw\Mesh.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Shader.h">
+    <ClInclude Include="src\opengl\draw\Model.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Texture.h">
+    <ClInclude Include="src\opengl\renderer\Renderer.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\VertexArray.h">
+    <ClInclude Include="src\opengl\renderer\Shader.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Window.h">
+    <ClInclude Include="src\opengl\renderer\Texture.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\core.h">
+    <ClInclude Include="src\opengl\renderer\VertexArray.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\main.h">
+    <ClInclude Include="src\opengl\core\Window.h">
+      <Filter>src\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\core\core.h">
+      <Filter>src\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\core\main.h">
       <Filter>src\opengl</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\common.hpp">
@@ -261,7 +267,7 @@
     <ClInclude Include="vendor\glm\glm\detail\type_vec4.inl">
       <Filter>vendor\glm\glm\detail</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\glm\glm\detail\type_vec4_simd.inl">
+    <ClInclude Include="vendor\glm\glm\detail\type_vec_simd.inl">
       <Filter>vendor\glm\glm\detail</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\exponential.hpp">
@@ -1008,7 +1014,7 @@
     <ClInclude Include="vendor\glm\glm\gtx\fast_trigonometry.inl">
       <Filter>vendor\glm\glm\gtx</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\glm\glm\gtx\float_notmalize.inl">
+    <ClInclude Include="vendor\glm\glm\gtx\float_normalize.inl">
       <Filter>vendor\glm\glm\gtx</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\gtx\functions.hpp">
@@ -1326,49 +1332,52 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\Mesh.h" />
-    <ClInclude Include="src\opengl\Model.h" />
+    <ClInclude Include="src\opengl\draw\DrawCube.h" />
+    <ClInclude Include="src\opengl\renderer\Draw.h" />
+    <ClInclude Include="src\opengl\draw\DrawPoint.h" />
+    <ClInclude Include="src\opengl\draw\DrawQuad.h" />
+    <ClInclude Include="src\opengl\draw\DrawTriangles.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\App.cpp">
+    <ClCompile Include="src\opengl\core\App.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Buffer.cpp">
+    <ClCompile Include="src\opengl\renderer\Buffer.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Buffer_Abstraction.cpp">
+    <ClCompile Include="src\opengl\renderer\Buffer_Abstraction.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\EditorCamera.cpp">
+    <ClCompile Include="src\opengl\core\EditorCamera.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Input.cpp">
+    <ClCompile Include="src\opengl\core\Input.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Renderer.cpp">
+    <ClCompile Include="src\opengl\renderer\Renderer.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Shader.cpp">
+    <ClCompile Include="src\opengl\renderer\Shader.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Texture.cpp">
+    <ClCompile Include="src\opengl\renderer\Texture.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\VertexArray.cpp">
+    <ClCompile Include="src\opengl\renderer\VertexArray.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\Window.cpp">
+    <ClCompile Include="src\opengl\core\Window.cpp">
       <Filter>src\opengl</Filter>
     </ClCompile>
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\shader\model_Vertex_Shader.glsl" />
-    <None Include="src\shader\model_Fragment_Shader.glsl" />
+    <ClCompile Include="src\opengl\draw\DrawCube.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawPoint.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawQuad.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawTriangles.cpp" />
   </ItemGroup>
 </Project>

@@ -105,22 +105,27 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\opengl\draw\DrawQuad.h" />
+    <ClInclude Include="src\opengl\draw\DrawTriangles.h" />
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="src\include.h" />
-    <ClInclude Include="src\opengl\App.h" />
-    <ClInclude Include="src\opengl\Buffer.h" />
-    <ClInclude Include="src\opengl\Buffer_Abstraction.h" />
-    <ClInclude Include="src\opengl\EditorCamera.h" />
-    <ClInclude Include="src\opengl\Input.h" />
-    <ClInclude Include="src\opengl\Mesh.h" />
-    <ClInclude Include="src\opengl\Model.h" />
-    <ClInclude Include="src\opengl\Renderer.h" />
-    <ClInclude Include="src\opengl\Shader.h" />
-    <ClInclude Include="src\opengl\Texture.h" />
-    <ClInclude Include="src\opengl\VertexArray.h" />
-    <ClInclude Include="src\opengl\Window.h" />
-    <ClInclude Include="src\opengl\core.h" />
-    <ClInclude Include="src\opengl\main.h" />
+    <ClInclude Include="src\opengl\core\App.h" />
+    <ClInclude Include="src\opengl\draw\DrawCube.h" />
+    <ClInclude Include="src\opengl\draw\DrawPoint.h" />
+    <ClInclude Include="src\opengl\renderer\Buffer.h" />
+    <ClInclude Include="src\opengl\renderer\Buffer_Abstraction.h" />
+    <ClInclude Include="src\opengl\core\EditorCamera.h" />
+    <ClInclude Include="src\opengl\core\Input.h" />
+    <ClInclude Include="src\opengl\draw\Mesh.h" />
+    <ClInclude Include="src\opengl\draw\Model.h" />
+    <ClInclude Include="src\opengl\renderer\Draw.h" />
+    <ClInclude Include="src\opengl\renderer\Renderer.h" />
+    <ClInclude Include="src\opengl\renderer\Shader.h" />
+    <ClInclude Include="src\opengl\renderer\Texture.h" />
+    <ClInclude Include="src\opengl\renderer\VertexArray.h" />
+    <ClInclude Include="src\opengl\core\Window.h" />
+    <ClInclude Include="src\opengl\core\core.h" />
+    <ClInclude Include="src\opengl\core\main.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_fixes.hpp" />
@@ -182,7 +187,7 @@
     <ClInclude Include="vendor\glm\glm\detail\type_vec3.inl" />
     <ClInclude Include="vendor\glm\glm\detail\type_vec4.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\type_vec4.inl" />
-    <ClInclude Include="vendor\glm\glm\detail\type_vec4_simd.inl" />
+    <ClInclude Include="vendor\glm\glm\detail\type_vec_simd.inl" />
     <ClInclude Include="vendor\glm\glm\exponential.hpp" />
     <ClInclude Include="vendor\glm\glm\ext.hpp" />
     <ClInclude Include="vendor\glm\glm\ext\_matrix_vectorize.hpp" />
@@ -431,7 +436,7 @@
     <ClInclude Include="vendor\glm\glm\gtx\fast_square_root.inl" />
     <ClInclude Include="vendor\glm\glm\gtx\fast_trigonometry.hpp" />
     <ClInclude Include="vendor\glm\glm\gtx\fast_trigonometry.inl" />
-    <ClInclude Include="vendor\glm\glm\gtx\float_notmalize.inl" />
+    <ClInclude Include="vendor\glm\glm\gtx\float_normalize.inl" />
     <ClInclude Include="vendor\glm\glm\gtx\functions.hpp" />
     <ClInclude Include="vendor\glm\glm\gtx\functions.inl" />
     <ClInclude Include="vendor\glm\glm\gtx\gradient_paint.hpp" />
@@ -539,22 +544,22 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\opengl\draw\DrawQuad.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawTriangles.cpp" />
     <ClCompile Include="src\hzpch.cpp" />
-    <ClCompile Include="src\opengl\App.cpp" />
-    <ClCompile Include="src\opengl\Buffer.cpp" />
-    <ClCompile Include="src\opengl\Buffer_Abstraction.cpp" />
-    <ClCompile Include="src\opengl\EditorCamera.cpp" />
-    <ClCompile Include="src\opengl\Input.cpp" />
-    <ClCompile Include="src\opengl\Renderer.cpp" />
-    <ClCompile Include="src\opengl\Shader.cpp" />
-    <ClCompile Include="src\opengl\Texture.cpp" />
-    <ClCompile Include="src\opengl\VertexArray.cpp" />
-    <ClCompile Include="src\opengl\Window.cpp" />
+    <ClCompile Include="src\opengl\core\App.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawCube.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawPoint.cpp" />
+    <ClCompile Include="src\opengl\renderer\Buffer.cpp" />
+    <ClCompile Include="src\opengl\renderer\Buffer_Abstraction.cpp" />
+    <ClCompile Include="src\opengl\core\EditorCamera.cpp" />
+    <ClCompile Include="src\opengl\core\Input.cpp" />
+    <ClCompile Include="src\opengl\renderer\Renderer.cpp" />
+    <ClCompile Include="src\opengl\renderer\Shader.cpp" />
+    <ClCompile Include="src\opengl\renderer\Texture.cpp" />
+    <ClCompile Include="src\opengl\renderer\VertexArray.cpp" />
+    <ClCompile Include="src\opengl\core\Window.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\shader\model_Fragment_Shader.glsl" />
-    <None Include="src\shader\model_Vertex_Shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

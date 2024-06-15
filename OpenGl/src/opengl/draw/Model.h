@@ -1,3 +1,4 @@
+#include"hzpch.h"
 
 #include <glad/glad.h> 
 
@@ -10,19 +11,12 @@
 #include <assimp/postprocess.h>
 
 #include "Mesh.h"
-#include "Shader.h"
-
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <map>
-#include <vector>
+#include "opengl/renderer/Shader.h"
+#include"opengl/renderer/Texture.h"
 
 using namespace std;
 
 namespace Opengl {
-    unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);//在此声明
 
     class Model
     {
@@ -40,7 +34,7 @@ namespace Opengl {
         }
 
         // draws the model, and thus all its meshes//绘制模型及其所有网格
-        void Draw(Shader& shader)
+        void Draw(const std::shared_ptr<Shader>& shader)
         {
             for (unsigned int i = 0; i < meshes.size(); i++)
                 meshes[i].Draw(shader);
@@ -194,7 +188,7 @@ namespace Opengl {
                 if (!skip)//没有加载过纹理
                 {
                     Model_Texture texture;
-                    texture.id = TextureFromFile(str.C_Str(), this->directory);//加载纹理，返回id
+                    texture.id = Texture::TextureFromFile(str.C_Str(), this->directory);//加载纹理，返回id
                     texture.type = typeName;//传入名字
                     texture.path = str.C_Str();//传入路径str.C_Str()
                     textures.push_back(texture);
@@ -205,47 +199,5 @@ namespace Opengl {
         }
     };
 
-    //来自文件的全部纹理（MTL文件中）
-    unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
-    {
-        stbi_set_flip_vertically_on_load(1);
-        string filename = string(path);
-        filename = directory + '/' + filename;//放在同一个文件中//obj前面的路径+当前的名字
-        unsigned int textureID;
-        glGenTextures(1, &textureID);
-
-        int width, height, nrComponents;
-        unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-        if (data)
-        {
-            GLenum format;
-            if (nrComponents == 1)
-                format = GL_RED;
-            else if (nrComponents == 3)
-                format = GL_RGB;
-            else if (nrComponents == 4)
-                format = GL_RGBA;
-
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            stbi_image_free(data);
-            //std::cout << "load at path: " << path << std::endl;
-
-        }
-        else
-        {
-            std::cout << "Model_Texture failed to load at path: " << path << std::endl;
-            stbi_image_free(data);
-        }
-
-        return textureID;
-    }
 
 }

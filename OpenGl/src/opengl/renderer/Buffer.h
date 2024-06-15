@@ -1,15 +1,17 @@
 #pragma once
-//缓冲布局&&缓冲
+//layout&&VBO,EBO
+
 #include"hzpch.h"
-#include "core.h"
+#include "opengl/core/core.h"
 
 namespace  Opengl {
-	enum class ShaderDataType//自定义类型标签（float对应vec浮点向量）
+	//自定义类型标签（float对应vec浮点向量）
+	enum class ShaderDataType
 	{
 		None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
 	};
-
-	static unsigned int ShaderDataTypeSize(ShaderDataType type)//当前类型所需步长（总字节）
+	//当前类型所需步长（总字节）
+	static unsigned int ShaderDataTypeSize(ShaderDataType type)
 	{
 		switch (type)
 		{
@@ -28,7 +30,7 @@ namespace  Opengl {
 
 		return 0;
 	}
-	//缓冲数据
+	//自定义layout的数据结构体
 	struct BufferElement
 	{
 		//位置值Index（通过++自增）（参数1），类型，个数，……（参数4，是否正规化），总步长，相对偏移，6个参数
@@ -66,7 +68,7 @@ namespace  Opengl {
 			return 0;
 		}
 	};
-	//缓冲布局（所有的布局）
+	//缓冲布局（对每个列表成员布局）
 	class BufferLayout
 	{
 	public:
@@ -87,7 +89,7 @@ namespace  Opengl {
 		std::vector<BufferElement>::const_iterator end() const { return m_Elements.end(); }
 	private:
 
-		void CalculateOffsetsAndStride()//计算步长
+		void CalculateOffsetsAndStride()//计算步长（总步长，偏移量）
 		{
 			unsigned int offset = 0;//（参数6）
 			m_Stride = 0;//（参数5）

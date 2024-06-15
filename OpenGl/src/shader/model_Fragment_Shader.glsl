@@ -3,8 +3,8 @@ layout(location = 0) out vec4 FragColor;
 
 //in
 in vec3 v_Position;
-in vec2 v_TexCoord;
 in vec3 v_Normal;
+in vec2 v_TexCoord;
 
 //ÌùÍ¼
 uniform sampler2D texture_diffuse1;//texture(texture_diffuse1, v_TexCoord);

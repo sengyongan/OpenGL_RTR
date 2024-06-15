@@ -1,6 +1,6 @@
 #pragma once
 //×ÅÉ«Æ÷
-#include "core.h"
+#include "opengl/core/core.h"
 
 #include <string>
 

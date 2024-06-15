@@ -1,19 +1,21 @@
 #pragma once
 //ÎÆÀí
-#include<string>
 #include<glad/glad.h>
+#include<string>
+
+using namespace std;
 
 namespace Opengl {
 	class Texture {
     public:
-		Texture(const std::string& path);
+		Texture(const string& path);
 		~Texture();
 
         uint32_t GetWidth() const  { return m_Width; }
         uint32_t GetHeight() const  { return m_Height; }
         uint32_t GetRendererID() const  { return m_RendererID; }
 
-        const std::string& GetPath() const  { return m_Path; }
+        const string& GetPath() const  { return m_Path; }
 
         void SetData(void* data, uint32_t size = 0) ;
 
@@ -21,8 +23,11 @@ namespace Opengl {
 
         bool IsLoaded() const  { return m_IsLoaded; }
 
+        static unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false) ;
+
+
     private:
-        std::string m_Path;//Â·¾¶
+        string m_Path;//Â·¾¶
 
         bool m_IsLoaded = false;
 

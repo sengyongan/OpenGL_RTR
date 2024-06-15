@@ -1,7 +1,7 @@
 #pragma once
 //‰÷»æ
 #include"VertexArray.h"
-#include"EditorCamera.h"
+#include"opengl/core/EditorCamera.h"
 
 #include <string>
 #include <glm/glm.hpp>

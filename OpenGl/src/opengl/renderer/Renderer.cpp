@@ -2,9 +2,13 @@
 
 #include"Shader.h"
 #include"Texture.h"
+#include"opengl/draw/Model.h"
+#include"opengl/core/App.h"
 
-#include"App.h"
-#include"Model.h"
+#include"opengl/draw/DrawCube.h"
+#include"opengl/draw/DrawPoint.h"
+#include"opengl/draw/DrawQuad.h"
+#include"opengl/draw/DrawTriangles.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,83 +18,6 @@
 
 namespace Opengl {
 
-	// Triangles
-	float vertices[3 * 7] = {//position + color
-		-0.5f, -0.5f, 0.0f,		0.8f, 0.2f, 0.8f, 1.0f,
-		 0.5f, -0.5f, 0.0f,		0.2f, 0.3f, 0.8f, 1.0f,
-		 0.0f,  0.5f, 0.0f,		0.8f, 0.8f, 0.2f, 1.0f
-	};
-	//quad
-	float squareVertices[] = {//position + texture左下，右下，右上，左上
-		-0.75f, -0.75f, 0.0f,	0.0f, 0.0f,
-		 0.75f, -0.75f, 0.0f,	1.0f, 0.0f,
-		 0.75f,  0.75f, 0.0f,	1.0f, 1.0f,
-		-0.75f,  0.75f, 0.0f,	0.0f, 1.0f
-	};
-	//cube(postion)
-	float point_Vertices[] = {//后，前，左，右，下，上（左下，右下，右上，右上，左上，左下）
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		-0.5f,  0.5f, -0.5f,
-
-		-0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
-
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-
-		-0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f
-	};
-	//cube(postion, TexCoord, normal)
-	float cube_Vertices[] = {//后，前，左，右，下，上（左下，右下，右上，右上，左上，左下）
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,  0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f,  0.0f, -1.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f,  0.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  0.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f,  1.0f,
-
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f,  0.0f,  0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f
-	};
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
@@ -120,42 +47,26 @@ namespace Opengl {
 		glm::vec3(2.0f,  2.0f, 5.0f),
 		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
-	//顶点索引
-	//Triangles
-	unsigned int triangles_squareIndices[3] = { 0, 1, 2 };
-	//quad
-	unsigned int square_Indices[6] = { 0, 1, 2, 2, 3, 0 };
-	//cube
-	unsigned int cube_Indices[36] = { 
-		0, 1, 2, 2, 3, 0 ,
-		4,5,6,6,7,4,
-		8, 9, 10, 10, 11, 8,
-		12, 13, 14, 14, 15, 12,
-		16, 17, 18, 18, 19, 16,
-		20, 21, 22, 22, 23, 20
-	};
+
 	//RendererData
 	struct RendererData {
+		std::shared_ptr<DrawCube> m_DrawCube;
+		std::shared_ptr<DrawPoint> m_DrawPoint;
+		std::shared_ptr<DrawQuad> m_DrawQuad;
+		std::shared_ptr<DrawTriangles> m_DrawTriangles;
 		//Texture
 		std::shared_ptr<Texture> Texture1;
 		std::shared_ptr<Texture> Texture2;
 		std::shared_ptr<Texture> Texture3;
 		//quad
-		std::shared_ptr<VertexArray> QuadVertexArray;
-		std::shared_ptr<VertexBuffer> QuadVertexBuffer;
 		std::shared_ptr<Shader> QuadShader;
 		//Triangles
-		std::shared_ptr<VertexArray> TrianglesVertexArray;
-		std::shared_ptr<VertexBuffer> TrianglesVertexBuffer;
 		std::shared_ptr<Shader> TrianglesShader;
 		//cube
-		std::shared_ptr<VertexArray> CubeVertexArray;
-		std::shared_ptr<VertexBuffer> CubeVertexBuffer;
+		//std::shared_ptr<VertexArray> CubeVertexArray;
 		std::shared_ptr<Shader> CubeShader;
 		//whilte_Cube
-		std::shared_ptr<VertexArray> whilte_CubeVertexArray;
-		std::shared_ptr<VertexBuffer> whilte_CubeVertexBuffer;
-		std::shared_ptr<Shader> whilte_CubeShader;
+		std::shared_ptr<Shader> PointShader;
 		std::vector<glm::vec3> lightColors;
 		//modle
 		std::shared_ptr<Shader> ModelShader;
@@ -171,8 +82,8 @@ namespace Opengl {
 		s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.CubeShader->Bind();
 		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.whilte_CubeShader->Bind();
-		s_Data.whilte_CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.PointShader->Bind();
+		s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.ModelShader->Bind();
 		s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 	}
@@ -182,7 +93,7 @@ namespace Opengl {
 		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
-		s_Data.whilte_CubeShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
+		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
 		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
 		//
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
@@ -194,93 +105,17 @@ namespace Opengl {
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
+		s_Data.m_DrawCube = std::make_unique<DrawCube>();
+		s_Data.m_DrawCube->Bind();
+		s_Data.m_DrawPoint = std::make_unique<DrawPoint>();
+		s_Data.m_DrawPoint->Bind();
+		s_Data.m_DrawQuad = std::make_unique<DrawQuad>();
+		s_Data.m_DrawQuad->Bind();
+		s_Data.m_DrawTriangles = std::make_unique<DrawTriangles>();
+		s_Data.m_DrawTriangles->Bind();
 
-		///////////////////////////////////////////////////////////////////////
-		/////quad///////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-		s_Data.QuadVertexArray = std::make_unique<VertexArray>();
 
-		std::shared_ptr<VertexBuffer> quad_vertexBuffer;
-		quad_vertexBuffer.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-
-		quad_vertexBuffer->SetLayout(
-			{
-					{ ShaderDataType::Float3, "a_Position" },
-					{ ShaderDataType::Float4, "a_Color" }
-			}
-		);
-		//进行布局
-		s_Data.QuadVertexArray->AddVertexBuffer(quad_vertexBuffer);
-
-		std::shared_ptr<IndexBuffer> quad_indexBuffer;
-		quad_indexBuffer.reset(IndexBuffer::Create(square_Indices, sizeof(square_Indices) / sizeof(uint32_t)));//获取个数
-		s_Data.QuadVertexArray->SetIndexBuffer(quad_indexBuffer);
-
-		///////////////////////////////////////////////////////////////////////
-		/////Triangles///////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-		s_Data.TrianglesVertexArray = std::make_unique<VertexArray>();
-
-		std::shared_ptr<VertexBuffer> vertexBuffer;//因为全局变量只需要VAO即可
-		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-
-		vertexBuffer->SetLayout(
-			{
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float4, "a_Color" }
-			}
-		);
-		//进行布局
-		s_Data.TrianglesVertexArray->AddVertexBuffer(vertexBuffer);
-
-		//m_IndexBuffer = std::make_unique<OpenGLIndexBuffer>(triangles_squareIndices, sizeof(triangles_squareIndices) / sizeof(unsigned int));
-		std::shared_ptr<IndexBuffer> indexBuffer;
-		indexBuffer.reset(IndexBuffer::Create(triangles_squareIndices, sizeof(triangles_squareIndices) / sizeof(unsigned int)));//获取个数
-		
-		s_Data.TrianglesVertexArray->SetIndexBuffer(indexBuffer);
-		///////////////////////////////////////////////////////////////////////
-		/////Cube///////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-		s_Data.CubeVertexArray = std::make_unique<VertexArray>();
-
-		std::shared_ptr<VertexBuffer> squareVB;
-		squareVB.reset(VertexBuffer::Create(cube_Vertices, sizeof(cube_Vertices)));
-
-		squareVB->SetLayout(
-			{
-				{ ShaderDataType::Float3, "a_Position" },
-				{ ShaderDataType::Float2, "a_TexCoord" },
-				{ ShaderDataType::Float3, "a_Normal" },
-			}
-		);
-
-		s_Data.CubeVertexArray->AddVertexBuffer(squareVB);
-
-		std::shared_ptr<IndexBuffer> squareIB;
-		squareIB.reset(IndexBuffer::Create(cube_Indices, sizeof(cube_Indices) / sizeof(unsigned int)));
-
-		s_Data.CubeVertexArray->SetIndexBuffer(squareIB);
-		///////////////////////////////////////////////////////////////////////
-		/////while_Cube///////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-		s_Data.whilte_CubeVertexArray = std::make_unique<VertexArray>();
-
-		std::shared_ptr<VertexBuffer> point_VertexBuffer;
-		point_VertexBuffer.reset(VertexBuffer::Create(point_Vertices, sizeof(point_Vertices)));
-
-		point_VertexBuffer->SetLayout(
-			{
-				{ ShaderDataType::Float3, "a_Position" },
-			}
-		);
-
-		s_Data.whilte_CubeVertexArray->AddVertexBuffer(point_VertexBuffer);
-
-		std::shared_ptr<IndexBuffer> point_IndexBuffer;
-		point_IndexBuffer.reset(IndexBuffer::Create(cube_Indices, sizeof(cube_Indices) / sizeof(unsigned int)));
-
-		s_Data.whilte_CubeVertexArray->SetIndexBuffer(point_IndexBuffer);
-		///////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
 		srand(300);
 		for (unsigned int i = 0; i < 10; i++)
 		{
@@ -306,18 +141,14 @@ namespace Opengl {
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
-		//model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
-		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
+		s_Data.TrianglesShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
+		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
+		s_Data.TrianglesShader->SetMat4("model", model);
 
-		//s_Data.TrianglesShader->Bind();
-
-		//s_Data.TrianglesShader->SetMat4("model", model);
-
-		//s_Data.TrianglesVertexArray->Bind();// seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		//Renderer::DrawIndexed(s_Data.TrianglesVertexArray);
-		//
-		//s_Data.TrianglesShader->Unbind();
+		s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
+		
 		// cube//////////////////////////////////////////////////////////////////////////////
 		// cube//////////////////////////////////////////////////////////////////////////////
 		// cube//////////////////////////////////////////////////////////////////////////////
@@ -349,17 +180,12 @@ namespace Opengl {
 		s_Data.CubeShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.05f, 0.05f, 0.05f));
 		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.05f, 0.05f, 0.05f));
-		//s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		//s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
 			s_Data.CubeShader->SetFloat3("pointLights["+ std::to_string(i) +"].position", pointLightPositions[i]);
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
-			//s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			//s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.2f, 0.2f, 0.2f));
-			//s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(0.2f, 0.2f, 0.2f));
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -376,7 +202,8 @@ namespace Opengl {
 
 		//
 		//
-		s_Data.CubeVertexArray->Bind();
+		
+		//s_Data.CubeVertexArray->Bind();
 		//
 		for (unsigned int i = 0; i < 10; i++)
 		{
@@ -385,35 +212,37 @@ namespace Opengl {
 			model = glm::rotate(model, glm::radians(40.0f) * (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
 			s_Data.CubeShader->SetMat4("model", model);
 
-			Renderer::DrawIndexed(s_Data.CubeVertexArray);
+			//Renderer::DrawIndexed(s_Data.CubeVertexArray);
+			s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
 		}
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
 
-		s_Data.whilte_CubeShader->Bind();
-		s_Data.whilte_CubeVertexArray->Bind();
+		s_Data.PointShader->Bind();
+		//s_Data.whilte_CubeVertexArray->Bind();
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, pointLightPositions[i]);
 			model = glm::scale(model, glm::vec3(0.2f)); 
-			s_Data.whilte_CubeShader->SetMat4("model", model);
-			s_Data.whilte_CubeShader->SetFloat3("color",s_Data.lightColors[i]);
-			Renderer::DrawIndexed(s_Data.whilte_CubeVertexArray);
+			s_Data.PointShader->SetMat4("model", model);
+			s_Data.PointShader->SetFloat3("color",s_Data.lightColors[i]);
+			//Renderer::DrawIndexed(s_Data.whilte_CubeVertexArray);
+			s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
+
 		}
 
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		s_Data.CubeShader->Bind();
-		s_Data.CubeVertexArray->Bind();
+		//s_Data.CubeVertexArray->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f,1.0f,20.0f));
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
 		s_Data.CubeShader->SetMat4("model", model);
-		Renderer::DrawIndexed(s_Data.CubeVertexArray);
-
-		s_Data.CubeShader->Unbind();
+		//Renderer::DrawIndexed(s_Data.CubeVertexArray);
+		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
 
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +296,7 @@ namespace Opengl {
 		model = glm::translate(model, glm::vec3(10.0f, 0.0f, 0.0f)); 
 		s_Data.ModelShader->SetMat4("model", model);
 
-		s_Data.m_Model->Draw(*(s_Data.ModelShader));
+		s_Data.m_Model->Draw(s_Data.ModelShader);
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{

@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Shader.h"
+#include "opengl/renderer/Shader.h"
 
 using namespace std;
 
@@ -55,7 +55,7 @@ namespace Opengl {
         }
 
         // render the mesh绘制网格（绑定vao，纹理，glsl，绘制，属于while中）
-        void Draw(Shader& shader)
+        void Draw(const std::shared_ptr<Shader>& shader)
         {
             //不同纹理类型的个数的初始
             unsigned int diffuseNr = 1;
@@ -80,7 +80,8 @@ namespace Opengl {
                     number = std::to_string(heightNr++); // transfer unsigned int to string
 
                 //现在将采样器设置为正确的纹理单位（位置值）
-                glUniform1i(glGetUniformLocation(shader.GetShaderProgram(), (name + number).c_str()), i);//name和序号
+                shader->SetInt((name + number).c_str(), i);
+                //glUniform1i(glGetUniformLocation(shader.GetShaderProgram(), (name + number).c_str()), i);//name和序号
 
                 // and finally bind the texture
                 glBindTexture(GL_TEXTURE_2D, textures[i].id);//绘制前要bind纹理
@@ -89,9 +90,9 @@ namespace Opengl {
             // draw mesh绘制网格
             glBindVertexArray(VAO);
             glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-
+            
             // 一旦配置完成，将所有内容设置回默认值总是好的做法。解除绑定
+            glBindVertexArray(0);
             glActiveTexture(GL_TEXTURE0);
         }
 
@@ -142,7 +143,9 @@ namespace Opengl {
             glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
 
             glBindVertexArray(0);
+
         }
+
     };
 
 }

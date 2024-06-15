@@ -1,6 +1,6 @@
-#include "opengl/App.h"
+#include "opengl/core/App.h"
 
-#include"opengl/Renderer.h"
+#include"opengl/renderer/Renderer.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

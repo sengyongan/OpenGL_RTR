@@ -1,7 +1,7 @@
 #pragma once
 //VAO
 #include"hzpch.h"
-#include "core.h"
+#include "opengl/core/core.h"
 #include"Buffer.h"
 
 namespace  Opengl {
