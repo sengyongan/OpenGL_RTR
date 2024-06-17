@@ -27,7 +27,7 @@ namespace Opengl {
 		point_VertexBuffer->SetLayout(
 			{
 					{ ShaderDataType::Float3, "a_Position" },
-					{ ShaderDataType::Float4, "a_Color" }
+					{ ShaderDataType::Float2, "a_TexCoord" }
 			}
 		);
 

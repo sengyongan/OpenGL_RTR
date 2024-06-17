@@ -47,6 +47,14 @@ namespace Opengl {
 		glm::vec3(2.0f,  2.0f, 5.0f),
 		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
+	vector<glm::vec3> windows
+	{
+			glm::vec3(-2.5f,  -3.5f, -2.0f),
+			glm::vec3(-2.3f,  -3.5f,  1.0f),
+			glm::vec3(-2.0f,  -3.5f,  0.9f),
+			glm::vec3(-2.3f,  -3.5f, -0.0f),
+			glm::vec3(-2.0f,  -3.5f, -0.6f)
+	};
 
 	//RendererData
 	struct RendererData {
@@ -54,10 +62,14 @@ namespace Opengl {
 		std::shared_ptr<DrawPoint> m_DrawPoint;
 		std::shared_ptr<DrawQuad> m_DrawQuad;
 		std::shared_ptr<DrawTriangles> m_DrawTriangles;
+
+		std::shared_ptr<DrawPoint> m_DrawStencil;
 		//Texture
 		std::shared_ptr<Texture> Texture1;
 		std::shared_ptr<Texture> Texture2;
 		std::shared_ptr<Texture> Texture3;
+		std::shared_ptr<Texture> grass_Texture;
+		std::shared_ptr<Texture> window_Texture;
 		//quad
 		std::shared_ptr<Shader> QuadShader;
 		//Triangles
@@ -99,6 +111,8 @@ namespace Opengl {
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
 		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
+		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
+		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
 		//
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
@@ -114,6 +128,8 @@ namespace Opengl {
 		s_Data.m_DrawTriangles = std::make_unique<DrawTriangles>();
 		s_Data.m_DrawTriangles->Bind();
 
+		s_Data.m_DrawStencil = std::make_unique<DrawPoint>();
+		s_Data.m_DrawStencil->Bind();
 
 		/////////////////////////////////////////////////////////////////////
 		srand(300);
@@ -133,29 +149,44 @@ namespace Opengl {
 		s_Data.CubeShader->SetInt("material.texture1", 0);
 		s_Data.CubeShader->SetInt("material.texture2", 1);
 		s_Data.CubeShader->SetInt("material.specular_Texture", 2);
+		//
+		s_Data.QuadShader->SetInt("texture1", 0);
 	}
 	void Renderer::EndScene()
 	{		
 		//
-		glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		//三角形///////////////////////////////////////////////////////////////////////////
-		//三角形///////////////////////////////////////////////////////////////////////////
-		//三角形///////////////////////////////////////////////////////////////////////////
-		s_Data.TrianglesShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
-		model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
-		s_Data.TrianglesShader->SetMat4("model", model);
-
-		s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
-		
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
+		glm::mat4 model = glm::mat4(1.0f);
+		//
 		float timeValue = glfwGetTime();
 		float blueValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		//三角形///////////////////////////////////////////////////////////////////////////
+		//三角形///////////////////////////////////////////////////////////////////////////
+		//三角形///////////////////////////////////////////////////////////////////////////
+		//s_Data.TrianglesShader->Bind();
+		//model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
+		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
+		//s_Data.TrianglesShader->SetMat4("model", model);
 
+		//s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
+		
+		//quad///////////////////////////////////////////////////////////////////////////
+		//quad///////////////////////////////////////////////////////////////////////////
+		//quad///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.grass_Texture->Bind();
+
+		s_Data.QuadShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
+		model = glm::translate(model, glm::vec3 (-5.0f, 0.0f, 0.0f));
+		s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(1.0f,1.0f,1.0f,1.0f));
+		s_Data.QuadShader->SetMat4("model", model);
+
+		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
 		//
 		glActiveTexture(GL_TEXTURE0);
 		s_Data.Texture1->Bind();
@@ -218,9 +249,7 @@ namespace Opengl {
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
-
 		s_Data.PointShader->Bind();
-		//s_Data.whilte_CubeVertexArray->Bind();
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			model = glm::mat4(1.0f);
@@ -228,26 +257,40 @@ namespace Opengl {
 			model = glm::scale(model, glm::vec3(0.2f)); 
 			s_Data.PointShader->SetMat4("model", model);
 			s_Data.PointShader->SetFloat3("color",s_Data.lightColors[i]);
-			//Renderer::DrawIndexed(s_Data.whilte_CubeVertexArray);
 			s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
 
 		}
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
 
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		s_Data.CubeShader->Bind();
 		//s_Data.CubeVertexArray->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f,1.0f,20.0f));
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f));
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
 		s_Data.CubeShader->SetMat4("model", model);
 		//Renderer::DrawIndexed(s_Data.CubeVertexArray);
 		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+		//
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		float scaleVal = 1.01f;
+		s_Data.PointShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f) * scaleVal);
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.PointShader->SetMat4("model", model);
+		s_Data.PointShader->SetFloat3("color", s_Data.lightColors[0]);
+		s_Data.m_DrawStencil->OnDraw(s_Data.PointShader);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
-		s_Data.ModelShader->Bind();
+		s_Data.ModelShader->Bind(); 
 
 		//
 		s_Data.ModelShader->SetFloat("shininess", 32.0f);
@@ -264,17 +307,12 @@ namespace Opengl {
 		s_Data.ModelShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.05f, 0.05f, 0.05f));
 		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.05f, 0.05f, 0.05f));
-		//s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		//s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
 			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
 			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
-			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.2f, 0.2f, 0.2f));
-			//s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(0.2f, 0.2f, 0.2f));
 			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
 			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -297,6 +335,30 @@ namespace Opengl {
 		s_Data.ModelShader->SetMat4("model", model);
 
 		s_Data.m_Model->Draw(s_Data.ModelShader);
+		//window///////////////////////////////////////////////////////////////////////////
+		//window///////////////////////////////////////////////////////////////////////////
+		//window///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.window_Texture->Bind();
+		s_Data.QuadShader->Bind();
+		std::map<float, glm::vec3> sorted;
+		for (unsigned int i = 0; i < windows.size(); i++)
+		{
+			float distance = glm::length(App::Get().GetCamera().GetPosition() - windows[i]);
+			sorted[distance] = windows[i];
+		}
+		int i = 0;
+		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, it->second);
+			s_Data.QuadShader->SetMat4("model", model);
+			s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(0.3f, 1.0f, 1.0f, 1.0f));
+			s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
+			//glm::vec4(s_Data.lightColors[i],1.0f)
+			i++;
+		}
+
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{
@@ -305,7 +367,16 @@ namespace Opengl {
 	void Renderer::Clear()
 	{
 		glEnable(GL_DEPTH_TEST);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDepthFunc(GL_LESS);
+
+		glEnable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
 	{

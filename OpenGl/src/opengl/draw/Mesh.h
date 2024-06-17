@@ -40,7 +40,7 @@ namespace Opengl {
         // mesh Data
         vector<Vertex>       vertices;//存储顶点数据的数组
         vector<unsigned int> indices;//顶点索引数据
-        vector<Model_Texture>      textures;//存储纹理数据的数组
+        vector<Model_Texture> textures;//存储纹理数据的数组
         unsigned int VAO;//顶点数组
 
         // constructor
@@ -93,7 +93,8 @@ namespace Opengl {
             
             // 一旦配置完成，将所有内容设置回默认值总是好的做法。解除绑定
             glBindVertexArray(0);
-            glActiveTexture(GL_TEXTURE0);
+            //glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
 
     private:

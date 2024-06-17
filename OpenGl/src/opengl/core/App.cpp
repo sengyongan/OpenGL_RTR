@@ -23,6 +23,7 @@ namespace Opengl {
 		m_Window->Init();
 		Renderer::init();
 		m_EditorCamera = std::make_unique<EditorCamera>(30.0f, 1.778f, 0.1f, 1000.0f);
+
 		
 	}
 	App::~App()

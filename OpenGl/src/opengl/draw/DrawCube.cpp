@@ -75,5 +75,7 @@ namespace Opengl {
 	{
 		s_CubeData.CubeVertexArray->Bind();
 		Renderer::DrawIndexed(s_CubeData.CubeVertexArray);
+		s_CubeData.CubeVertexArray->Unbind();
+
 	}
 }
