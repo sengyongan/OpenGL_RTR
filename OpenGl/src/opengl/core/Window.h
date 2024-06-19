@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include<string>
 
 namespace Opengl {
 
@@ -15,12 +16,13 @@ namespace Opengl {
 	public:
 		Window();
 		~Window();
-		void Init();
+		void Init(const unsigned int& width, const unsigned int& height, std::string windowName );
 		void OnUpdate();
 		void Ondestory();
 		
 		GLFWwindow* GetNativeWindow() const { return m_Window; }
-
+		const int& GetNewWidth() const { return m_NewWidth; }
+		const int& GetNewHeight() const { return m_NewHeight; }
 
 	public:
 		static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -28,6 +30,9 @@ namespace Opengl {
 
 	public:
 		GLFWwindow* m_Window;//Êµ¼Ê´°¿Ú
+
+	private:
+		int m_NewWidth, m_NewHeight;
 
 	};
 }

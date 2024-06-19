@@ -4,11 +4,13 @@
 #include"Texture.h"
 #include"opengl/draw/Model.h"
 #include"opengl/core/App.h"
+#include"Framebuffer.h"
 
 #include"opengl/draw/DrawCube.h"
 #include"opengl/draw/DrawPoint.h"
 #include"opengl/draw/DrawQuad.h"
 #include"opengl/draw/DrawTriangles.h"
+#include"opengl/draw/DrawScreenQuad.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -64,18 +66,21 @@ namespace Opengl {
 		std::shared_ptr<DrawTriangles> m_DrawTriangles;
 
 		std::shared_ptr<DrawPoint> m_DrawStencil;
+
+		std::shared_ptr<DrawScreenQuad> m_DrawScreenQuad;
 		//Texture
 		std::shared_ptr<Texture> Texture1;
 		std::shared_ptr<Texture> Texture2;
 		std::shared_ptr<Texture> Texture3;
 		std::shared_ptr<Texture> grass_Texture;
 		std::shared_ptr<Texture> window_Texture;
+		//
+		std::shared_ptr<Framebuffer> frameBuffer;
 		//quad
 		std::shared_ptr<Shader> QuadShader;
 		//Triangles
 		std::shared_ptr<Shader> TrianglesShader;
 		//cube
-		//std::shared_ptr<VertexArray> CubeVertexArray;
 		std::shared_ptr<Shader> CubeShader;
 		//whilte_Cube
 		std::shared_ptr<Shader> PointShader;
@@ -83,8 +88,12 @@ namespace Opengl {
 		//modle
 		std::shared_ptr<Shader> ModelShader;
 		std::shared_ptr<Model> m_Model;
+		//
+		std::shared_ptr<Shader> SceneShader;
+
 	};
 	static RendererData s_Data;
+
 
 	void Renderer::BeginScene(const EditorCamera& camera)
 	{
@@ -98,15 +107,20 @@ namespace Opengl {
 		s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.ModelShader->Bind();
 		s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.SceneShader->Bind();
+
 	}
 
 	void Renderer::init()
 	{
+
+		//
 		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
 		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
 		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
+		s_Data.SceneShader.reset(new Shader("../OpenGl/src/shader/screen_Vertex_Shader.glsl", "../OpenGl/src/shader/screen_Fragment_Shader.glsl"));
 		//
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
@@ -114,11 +128,18 @@ namespace Opengl {
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
 		//
+		FramebufferSpecification fbSpec;
+		fbSpec.Width = 1600;
+		fbSpec.Height = 900;
+		s_Data.frameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		s_Data.frameBuffer->Unbind();
+		//
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
+		//
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
 		s_Data.m_DrawPoint = std::make_unique<DrawPoint>();
@@ -130,6 +151,8 @@ namespace Opengl {
 
 		s_Data.m_DrawStencil = std::make_unique<DrawPoint>();
 		s_Data.m_DrawStencil->Bind();
+		s_Data.m_DrawScreenQuad = std::make_unique<DrawScreenQuad>();
+		s_Data.m_DrawScreenQuad->Bind();
 
 		/////////////////////////////////////////////////////////////////////
 		srand(300);
@@ -150,10 +173,22 @@ namespace Opengl {
 		s_Data.CubeShader->SetInt("material.texture2", 1);
 		s_Data.CubeShader->SetInt("material.specular_Texture", 2);
 		//
+		s_Data.QuadShader->Bind();
+
 		s_Data.QuadShader->SetInt("texture1", 0);
+		//
+		s_Data.SceneShader->Bind();
+
+		s_Data.SceneShader->SetInt("screenTexture", 0);
 	}
 	void Renderer::EndScene()
 	{		
+		//		
+		s_Data.frameBuffer->framebuffer_size();
+
+		s_Data.frameBuffer->Bind();
+
+		Renderer::Clear();//需要放在这个位置，清除自己的帧缓冲
 		//
 		glm::mat4 model = glm::mat4(1.0f);
 		//
@@ -267,11 +302,9 @@ namespace Opengl {
 		glStencilMask(0xFF);
 
 		s_Data.CubeShader->Bind();
-		//s_Data.CubeVertexArray->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f));
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
 		s_Data.CubeShader->SetMat4("model", model);
-		//Renderer::DrawIndexed(s_Data.CubeVertexArray);
 		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
 		//
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -347,7 +380,6 @@ namespace Opengl {
 			float distance = glm::length(App::Get().GetCamera().GetPosition() - windows[i]);
 			sorted[distance] = windows[i];
 		}
-		int i = 0;
 		for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
 		{
 			model = glm::mat4(1.0f);
@@ -355,9 +387,22 @@ namespace Opengl {
 			s_Data.QuadShader->SetMat4("model", model);
 			s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(0.3f, 1.0f, 1.0f, 1.0f));
 			s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
-			//glm::vec4(s_Data.lightColors[i],1.0f)
-			i++;
 		}
+		//framebuffer///////////////////////////////////////////////////////////////////////////
+		//framebuffer///////////////////////////////////////////////////////////////////////////
+		//framebuffer///////////////////////////////////////////////////////////////////////////
+		s_Data.frameBuffer->Unbind();
+		glDisable(GL_DEPTH_TEST);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		s_Data.SceneShader->Bind();
+		s_Data.m_DrawScreenQuad->Bind();
+
+		s_Data.frameBuffer->BindTexture();
+
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
 
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
@@ -366,6 +411,7 @@ namespace Opengl {
 	}
 	void Renderer::Clear()
 	{
+
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
@@ -376,11 +422,16 @@ namespace Opengl {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+
+
 	}
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
 	{
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
+
 
 }

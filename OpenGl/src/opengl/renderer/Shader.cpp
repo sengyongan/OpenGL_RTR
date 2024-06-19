@@ -48,7 +48,7 @@ namespace Opengl {
 		//顶点着色器
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-		glShaderSource(vertexShader, 1, &vShaderCode, NULL);
+		glShaderSource(vertexShader, 1, &vShaderCode, nullptr);
 		glCompileShader(vertexShader);
 		checkCompileErrors(vertexShader, "VERTEX");
 		// check for shader compile errors
@@ -59,7 +59,7 @@ namespace Opengl {
 		//glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 		//if (!success)
 		//{
-		//	glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		//	glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
 		//	std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 		//}
 		 //Create an empty fragment shader handle片段着色器
@@ -76,7 +76,7 @@ namespace Opengl {
 		//glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 		//if (!success)
 		//{
-		//	glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		//	glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
 		//	std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 		//}
 
@@ -90,7 +90,7 @@ namespace Opengl {
 		// check for linking errors
 		//glGetProgramiv(m_RendererID, GL_LINK_STATUS, &success);
 		//if (!success) {
-		//	glGetProgramInfoLog(m_RendererID, 512, NULL, infoLog);
+		//	glGetProgramInfoLog(m_RendererID, 512, nullptr, infoLog);
 		//	std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 		//}
 		glDeleteShader(vertexShader);
@@ -120,7 +120,7 @@ namespace Opengl {
 			glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 			if (!success)
 			{
-				glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+				glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
 				std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
 			}
 		}
@@ -129,7 +129,7 @@ namespace Opengl {
 			glGetProgramiv(shader, GL_LINK_STATUS, &success);
 			if (!success)
 			{
-				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+				glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
 				std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
 			}
 		}

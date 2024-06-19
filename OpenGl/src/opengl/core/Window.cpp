@@ -1,11 +1,8 @@
 #include "Window.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#include"App.h"
 namespace Opengl {
-    const unsigned int SCR_WIDTH = 800;
-    const unsigned int SCR_HEIGHT = 600;
-
 
     Window::Window()
     {
@@ -15,15 +12,15 @@ namespace Opengl {
     {
         Window::Ondestory();
     }
-    void Window::Init()
+    void Window::Init(const unsigned int& width, const unsigned int& height, std::string windowName)
     {
         // glfw: initialize and configure初始化glfw
         // ------------------------------
         glfwInit();
         // glfw window creation创建窗口
         // --------------------
-        m_Window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "senlongan_OpenGL_demo", NULL, NULL);
-        if (m_Window == NULL)
+        m_Window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+        if (m_Window == nullptr)
         {
             std::cout << "Failed to create GLFW window" << std::endl;
             glfwTerminate();//终止使用 OpenGL 或 Vulkan 的应用程序
@@ -76,6 +73,10 @@ namespace Opengl {
         // make sure the viewport matches the new window dimensions; note that width and 
         // height will be significantly larger than specified on retina displays.
         glViewport(0, 0, width, height);
+        App::Get().GetWindow(). m_NewWidth = width;
+        std::cout << "GLFW" << width << std::endl;
+        App::Get().GetWindow(). m_NewHeight = height;
+        std::cout << "GLFW" << height << std::endl;
     }
 
 

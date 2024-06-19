@@ -26,6 +26,9 @@ namespace Opengl {
         const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
         const glm::mat4& GetProjection() const { return m_ProMatrix; }
         glm::mat4 GetViewProjection() const { return m_ProMatrix * m_ViewMatrix; }//最终：获取视图投影矩阵(我们的编辑器相机）
+
+        float GetViewportWidth() const { return m_ViewportWidth; }
+        float GetViewportHeight() const { return m_ViewportHeight; }
         
         //获取相机经过旋转后，局部 上，右，前 方向轴
         glm::vec3 GetUpDirection() const;//获取上方向
@@ -84,7 +87,7 @@ namespace Opengl {
         float m_Pitch = 0.0f, m_Yaw = 0.0f;//仰角和偏航角
 
         //
-        float m_ViewportWidth = 1280, m_ViewportHeight = 720;//视口大小
+        float m_ViewportWidth = 1600, m_ViewportHeight = 900;//视口大小
 
     };
 

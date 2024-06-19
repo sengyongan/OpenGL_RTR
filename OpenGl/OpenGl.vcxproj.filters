@@ -1337,6 +1337,8 @@
     <ClInclude Include="src\opengl\draw\DrawPoint.h" />
     <ClInclude Include="src\opengl\draw\DrawQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawTriangles.h" />
+    <ClInclude Include="src\opengl\renderer\Framebuffer.h" />
+    <ClInclude Include="src\opengl\draw\DrawScreenQuad.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1379,5 +1381,7 @@
     <ClCompile Include="src\opengl\draw\DrawPoint.cpp" />
     <ClCompile Include="src\opengl\draw\DrawQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawTriangles.cpp" />
+    <ClCompile Include="src\opengl\renderer\Framebuffer.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawScreenQuad.cpp" />
   </ItemGroup>
 </Project>

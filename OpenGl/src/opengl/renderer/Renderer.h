@@ -17,6 +17,9 @@ namespace Opengl {
 		static void Clear();
 
 		static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray);
+			
+		//temp
+
 
 	};
 }

@@ -106,6 +106,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\opengl\draw\DrawQuad.h" />
+    <ClInclude Include="src\opengl\draw\DrawScreenQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawTriangles.h" />
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="src\include.h" />
@@ -119,6 +120,7 @@
     <ClInclude Include="src\opengl\draw\Mesh.h" />
     <ClInclude Include="src\opengl\draw\Model.h" />
     <ClInclude Include="src\opengl\renderer\Draw.h" />
+    <ClInclude Include="src\opengl\renderer\Framebuffer.h" />
     <ClInclude Include="src\opengl\renderer\Renderer.h" />
     <ClInclude Include="src\opengl\renderer\Shader.h" />
     <ClInclude Include="src\opengl\renderer\Texture.h" />
@@ -545,6 +547,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\opengl\draw\DrawQuad.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawScreenQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawTriangles.cpp" />
     <ClCompile Include="src\hzpch.cpp" />
     <ClCompile Include="src\opengl\core\App.cpp" />
@@ -554,6 +557,7 @@
     <ClCompile Include="src\opengl\renderer\Buffer_Abstraction.cpp" />
     <ClCompile Include="src\opengl\core\EditorCamera.cpp" />
     <ClCompile Include="src\opengl\core\Input.cpp" />
+    <ClCompile Include="src\opengl\renderer\Framebuffer.cpp" />
     <ClCompile Include="src\opengl\renderer\Renderer.cpp" />
     <ClCompile Include="src\opengl\renderer\Shader.cpp" />
     <ClCompile Include="src\opengl\renderer\Texture.cpp" />
