@@ -5,7 +5,8 @@
 #include"opengl/draw/Model.h"
 #include"opengl/core/App.h"
 #include"Framebuffer.h"
-
+#include"Uniform.h"
+//
 #include"opengl/draw/DrawCube.h"
 #include"opengl/draw/DrawPointLight.h"
 #include"opengl/draw/DrawPoint.h"
@@ -53,15 +54,16 @@ namespace Opengl {
 	};
 	vector<glm::vec3> windows
 	{
-			glm::vec3(-2.5f,  -3.5f, -2.0f),
-			glm::vec3(-2.3f,  -3.5f,  1.0f),
-			glm::vec3(-2.0f,  -3.5f,  0.9f),
-			glm::vec3(-2.3f,  -3.5f, -0.0f),
-			glm::vec3(-2.0f,  -3.5f, -0.6f)
+		glm::vec3(-2.5f,  -3.5f, -2.0f),
+		glm::vec3(-2.3f,  -3.5f,  1.0f),
+		glm::vec3(-2.0f,  -3.5f,  0.9f),
+		glm::vec3(-2.3f,  -3.5f, -0.0f),
+		glm::vec3(-2.0f,  -3.5f, -0.6f)
 	};
 
 	//RendererData
 	struct RendererData {
+		//Draw/////////////////////////////////////////////////////
 		std::shared_ptr<DrawCube> m_DrawCube;
 		std::shared_ptr<DrawPointLight> m_DrawPointLight;
 		std::shared_ptr<DrawPoint> m_DrawPoint;
@@ -71,13 +73,13 @@ namespace Opengl {
 		std::shared_ptr<DrawPointLight> m_DrawStencil;
 
 		std::shared_ptr<DrawScreenQuad> m_DrawScreenQuad;
-		//Texture
+		//Texture//////////////////////////////////////////////////
 		std::shared_ptr<Texture> Texture1;
 		std::shared_ptr<Texture> Texture2;
 		std::shared_ptr<Texture> Texture3;
 		std::shared_ptr<Texture> grass_Texture;
 		std::shared_ptr<Texture> window_Texture;
-		//skybox
+		//skybox///////////////////////////////////////////////////
 		vector<std::string> CubeTexturePath{
 			"../OpenGl/resources/skybox/right.jpg",
 			"../OpenGl/resources/skybox/left.jpg",
@@ -89,8 +91,9 @@ namespace Opengl {
 		std::shared_ptr<DrawSkybox> m_DrawSkybox;
 		std::shared_ptr<Texture> cube_Texture;
 		std::shared_ptr<Shader> SkyboxShader;
-		//
+		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> frameBuffer;
+		//Shader///////////////////////////////////////////////////
 		//quad
 		std::shared_ptr<Shader> QuadShader;
 		//Triangles
@@ -99,7 +102,7 @@ namespace Opengl {
 		std::shared_ptr<Shader> CubeShader;
 		//whilte_Cube
 		std::shared_ptr<Shader> PointLightShader;
-		std::vector<glm::vec3> lightColors;
+		std::vector<glm::vec3> lightColors;/////////////
 		//point
 		std::shared_ptr<Shader> PointShader;
 		//modle
@@ -107,31 +110,35 @@ namespace Opengl {
 		std::shared_ptr<Model> m_Model;
 		//
 		std::shared_ptr<Shader> SceneShader;
-
+		//UniformBuffer////////////////////////////////////////////
+		std::shared_ptr<Uniform> uniformBuffer;
 	};
 	static RendererData s_Data;
 
 
 	void Renderer::BeginScene(const EditorCamera& camera)
 	{
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.TrianglesShader->Bind();
-		s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.CubeShader->Bind();
-		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.PointLightShader->Bind();
-		s_Data.PointLightShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.PointShader->Bind();
-		s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.ModelShader->Bind();
-		s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//uniformData_BindPoint
+		glm::mat4 ViewProjection = camera.GetViewProjection();
+		s_Data.uniformBuffer->SetData(glm::value_ptr(ViewProjection), sizeof(glm::mat4),0);
+		//
+		//s_Data.QuadShader->Bind();
+		//s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//s_Data.TrianglesShader->Bind();
+		//s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//s_Data.CubeShader->Bind();
+		//s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//s_Data.PointLightShader->Bind();
+		//s_Data.PointLightShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//s_Data.PointShader->Bind();
+		//s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		//s_Data.ModelShader->Bind();
+		//s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
 	}
 
 	void Renderer::init()
 	{
-		//stbi_set_flip_vertically_on_load(true);
 		//
 		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
@@ -147,7 +154,6 @@ namespace Opengl {
 		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
-		//
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 		//
@@ -158,9 +164,9 @@ namespace Opengl {
 		s_Data.frameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		s_Data.frameBuffer->Unbind();
 		//
-		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
-		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
+		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
 		//
@@ -184,6 +190,24 @@ namespace Opengl {
 		s_Data.m_DrawSkybox = std::make_unique<DrawSkybox>();
 		s_Data.m_DrawSkybox->Bind();
 
+		//uniformBuffer//////////////////////////////////////////////////////////
+		//uniformBuffer_BindPoint
+		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.QuadShader->GetShaderProgram(), uniformBlockIndex_QuadShader, 0);
+		unsigned int uniformBlockIndex_TrianglesShader = glGetUniformBlockIndex(s_Data.TrianglesShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.TrianglesShader->GetShaderProgram(), uniformBlockIndex_TrianglesShader, 0);
+		unsigned int uniformBlockIndex_CubeShader = glGetUniformBlockIndex(s_Data.CubeShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.CubeShader->GetShaderProgram(), uniformBlockIndex_CubeShader, 0);
+		unsigned int uniformBlockIndex_PointLightShader = glGetUniformBlockIndex(s_Data.PointLightShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.PointLightShader->GetShaderProgram(), uniformBlockIndex_PointLightShader, 0);
+		unsigned int uniformBlockIndex_PointShader = glGetUniformBlockIndex(s_Data.PointShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.PointShader->GetShaderProgram(), uniformBlockIndex_PointShader, 0);
+		unsigned int uniformBlockIndex_ModelShader = glGetUniformBlockIndex(s_Data.ModelShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.ModelShader->GetShaderProgram(), uniformBlockIndex_ModelShader, 0);
+		//uniformBuffer_GenBuffer
+		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
+
+
 		/////////////////////////////////////////////////////////////////////
 		srand(300);
 		for (unsigned int i = 0; i < 10; i++)
@@ -202,6 +226,7 @@ namespace Opengl {
 		s_Data.CubeShader->SetInt("material.texture1", 0);
 		s_Data.CubeShader->SetInt("material.texture2", 1);
 		s_Data.CubeShader->SetInt("material.specular_Texture", 2);
+		s_Data.CubeShader->SetInt("material.texture_back", 3);
 		//
 		s_Data.QuadShader->Bind();
 
@@ -215,9 +240,9 @@ namespace Opengl {
 
 		s_Data.SkyboxShader->SetInt("skybox", 0);
 		//
-		s_Data.ModelShader->Bind();
+		//s_Data.ModelShader->Bind();
 
-		s_Data.ModelShader->SetInt("skybox", 2);
+		//s_Data.ModelShader->SetInt("skybox", 2);
 	}
 	void Renderer::EndScene()
 	{		
@@ -282,6 +307,8 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE1);
 		s_Data.Texture2->Bind();
 		glActiveTexture(GL_TEXTURE2);
+		s_Data.Texture3->Bind();
+		glActiveTexture(GL_TEXTURE3);
 		s_Data.Texture3->Bind();
 		//
 		s_Data.CubeShader->Bind();
@@ -386,8 +413,8 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
-		glActiveTexture(GL_TEXTURE2);
-		s_Data.cube_Texture->BindCubeTexture();
+		//glActiveTexture(GL_TEXTURE2);
+		//s_Data.cube_Texture->BindCubeTexture();
 
 		s_Data.ModelShader->Bind(); 
 
@@ -429,8 +456,9 @@ namespace Opengl {
 
 
 		//
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
-		model = glm::translate(model, glm::vec3(10.0f, -15.0f, 0.0f)); 
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
+		model = glm::translate(model, glm::vec3(5.0f, 5.0f, 0.0f)); 
+		//model = glm::translate(model, glm::vec3(10.0f, -15.0f, 0.0f)); 
 		s_Data.ModelShader->SetMat4("model", model);
 
 		s_Data.m_Model->Draw(s_Data.ModelShader);
@@ -466,6 +494,8 @@ namespace Opengl {
 
 		s_Data.SceneShader->Bind();
 		s_Data.m_DrawScreenQuad->Bind();
+		s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
+		s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
 
 		s_Data.frameBuffer->BindTexture();
 

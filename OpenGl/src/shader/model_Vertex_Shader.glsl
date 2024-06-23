@@ -8,7 +8,10 @@ out vec2 v_TexCoord;
 out vec3 v_Normal;
 
 uniform mat4 model;
-uniform mat4 u_ViewProjection;
+layout (std140) uniform Matrices
+{
+	mat4 u_ViewProjection;
+};
 
 void main()
 {

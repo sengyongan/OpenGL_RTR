@@ -4,7 +4,8 @@ out vec4 FragColor;
 in vec2 v_TexCoord;
 
 uniform sampler2D screenTexture;
-
+uniform int screenWidth_mid;
+uniform int screenHeight_mid;
 
 const float offset = 1.0 / 300.0;  
 
@@ -37,5 +38,19 @@ void main()
     for(int i = 0; i < 9; i++)
         col += sampleTex[i] * kernel[i];
 
-     FragColor = texture(screenTexture, v_TexCoord);
+    FragColor = texture(screenTexture, v_TexCoord);
+
+    //if (gl_FragCoord.x < (screenWidth_mid / 2)) {
+    //    if (gl_FragCoord.y < (screenHeight_mid / 2)) {
+    //        FragColor = texture(screenTexture, v_TexCoord) * vec4(1.0, 0.0, 0.0, 1.0); // 红色
+    //    } else {
+    //        FragColor = texture(screenTexture, v_TexCoord) * vec4(0.0, 0.0, 1.0, 1.0); // 蓝色
+    //    }
+    //} else {
+    //    if (gl_FragCoord.y < (screenHeight_mid / 2)) {
+    //        FragColor = texture(screenTexture, v_TexCoord) * vec4(0.0, 1.0, 0.0, 1.0); // 绿色
+    //    } else {
+    //        FragColor = texture(screenTexture, v_TexCoord) * vec4(1.0, 1.0, 0.0, 1.0); // 黄色
+    //    }
+    //}
 }

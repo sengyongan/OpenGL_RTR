@@ -1,20 +1,8 @@
 #include "DrawSkybox.h"
 
 namespace Opengl {
-//		// positions          
-//	-1.0f,  1.0f, -1.0f,235562
-//	-1.0f, -1.0f, -1.0f,
-//	 1.0f, -1.0f, -1.0f,
-//	 1.0f, -1.0f, -1.0f,
-//	 1.0f,  1.0f, -1.0f,
-//	-1.0f,  1.0f, -1.0f,
-//————————————————
-//
-//							版权声明：本文为博主原创文章，遵循 CC 4.0 BY - SA 版权协议，转载请附上原文出处链接和本声明。
-//
-//原文链接：https ://blog.csdn.net/weixin_43803133/article/details/108415427
 	//cube(postion)
-	float Skybox_Vertices[] = {//后，前，左，右，下，上（左下，右下，右上，右上，左上，左下）
+	float Skybox_Vertices[] = {
 		// positions          
 		-1.0f, -1.0f, -1.0f,
 		 1.0f, -1.0f, -1.0f,

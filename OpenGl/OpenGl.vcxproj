@@ -129,6 +129,7 @@
     <ClInclude Include="src\opengl\renderer\Renderer.h" />
     <ClInclude Include="src\opengl\renderer\Shader.h" />
     <ClInclude Include="src\opengl\renderer\Texture.h" />
+    <ClInclude Include="src\opengl\renderer\Uniform.h" />
     <ClInclude Include="src\opengl\renderer\VertexArray.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
     <ClInclude Include="vendor\glm\glm\detail\_features.hpp" />
@@ -566,6 +567,7 @@
     <ClCompile Include="src\opengl\renderer\Renderer.cpp" />
     <ClCompile Include="src\opengl\renderer\Shader.cpp" />
     <ClCompile Include="src\opengl\renderer\Texture.cpp" />
+    <ClCompile Include="src\opengl\renderer\Uniform.cpp" />
     <ClCompile Include="src\opengl\renderer\VertexArray.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />
   </ItemGroup>

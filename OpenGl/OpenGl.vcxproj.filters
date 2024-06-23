@@ -1368,6 +1368,7 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\opengl\renderer\Uniform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1430,5 +1431,6 @@
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\opengl\renderer\Uniform.cpp" />
   </ItemGroup>
 </Project>

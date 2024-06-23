@@ -9,7 +9,10 @@ out vec4 v_Color;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 u_ViewProjection;
+layout (std140) uniform Matrices
+{
+	mat4 u_ViewProjection;
+};
 
 void main()
 {

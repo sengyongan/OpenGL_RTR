@@ -13,13 +13,6 @@ namespace Opengl {
     }
     void Framebuffer::Invalidate()
     {
-        //if (m_RendererID) {//如果存在帧缓冲，删除一切类的成员变量
-        //    glDeleteFramebuffers(1, &m_RendererID);
-        //    glDeleteFramebuffers(1, &m_ColorAttachment);
-        //    glDeleteFramebuffers(1, &m_DepthAttachment);
-        //    m_ColorAttachment = 0;
-        //    m_DepthAttachment = 0;
-        //}
 
         glGenFramebuffers(1, &m_RendererID);//创建帧缓冲
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);

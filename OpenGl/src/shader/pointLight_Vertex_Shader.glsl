@@ -2,7 +2,10 @@
 layout (location = 0) in vec3 a_Position;
 
 uniform mat4 model;
-uniform mat4 u_ViewProjection;
+layout (std140) uniform Matrices
+{
+	mat4 u_ViewProjection;
+};
 
 void main()
 {

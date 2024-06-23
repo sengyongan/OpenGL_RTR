@@ -136,7 +136,7 @@ namespace Opengl {
         if (m_Distance < 1.0f)
         {
             m_FocalPoint += GetForwardDirection();
-            std::cout << m_Distance <<std::endl;
+            //std::cout << m_Distance <<std::endl;
             m_Distance = 1.0f;
         }
     }
