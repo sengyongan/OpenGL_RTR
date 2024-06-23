@@ -7,10 +7,12 @@
 #include"Framebuffer.h"
 
 #include"opengl/draw/DrawCube.h"
+#include"opengl/draw/DrawPointLight.h"
 #include"opengl/draw/DrawPoint.h"
 #include"opengl/draw/DrawQuad.h"
 #include"opengl/draw/DrawTriangles.h"
 #include"opengl/draw/DrawScreenQuad.h"
+#include"opengl/draw/DrawSkybox.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -61,11 +63,12 @@ namespace Opengl {
 	//RendererData
 	struct RendererData {
 		std::shared_ptr<DrawCube> m_DrawCube;
+		std::shared_ptr<DrawPointLight> m_DrawPointLight;
 		std::shared_ptr<DrawPoint> m_DrawPoint;
 		std::shared_ptr<DrawQuad> m_DrawQuad;
 		std::shared_ptr<DrawTriangles> m_DrawTriangles;
 
-		std::shared_ptr<DrawPoint> m_DrawStencil;
+		std::shared_ptr<DrawPointLight> m_DrawStencil;
 
 		std::shared_ptr<DrawScreenQuad> m_DrawScreenQuad;
 		//Texture
@@ -74,6 +77,18 @@ namespace Opengl {
 		std::shared_ptr<Texture> Texture3;
 		std::shared_ptr<Texture> grass_Texture;
 		std::shared_ptr<Texture> window_Texture;
+		//skybox
+		vector<std::string> CubeTexturePath{
+			"../OpenGl/resources/skybox/right.jpg",
+			"../OpenGl/resources/skybox/left.jpg",
+			"../OpenGl/resources/skybox/top.jpg",
+			"../OpenGl/resources/skybox/bottom.jpg",
+			"../OpenGl/resources/skybox/back.jpg",
+			"../OpenGl/resources/skybox/front.jpg"
+		};
+		std::shared_ptr<DrawSkybox> m_DrawSkybox;
+		std::shared_ptr<Texture> cube_Texture;
+		std::shared_ptr<Shader> SkyboxShader;
 		//
 		std::shared_ptr<Framebuffer> frameBuffer;
 		//quad
@@ -83,8 +98,10 @@ namespace Opengl {
 		//cube
 		std::shared_ptr<Shader> CubeShader;
 		//whilte_Cube
-		std::shared_ptr<Shader> PointShader;
+		std::shared_ptr<Shader> PointLightShader;
 		std::vector<glm::vec3> lightColors;
+		//point
+		std::shared_ptr<Shader> PointShader;
 		//modle
 		std::shared_ptr<Shader> ModelShader;
 		std::shared_ptr<Model> m_Model;
@@ -103,24 +120,27 @@ namespace Opengl {
 		s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.CubeShader->Bind();
 		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+		s_Data.PointLightShader->Bind();
+		s_Data.PointLightShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.PointShader->Bind();
 		s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 		s_Data.ModelShader->Bind();
 		s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		s_Data.SceneShader->Bind();
 
 	}
 
 	void Renderer::init()
 	{
-
+		//stbi_set_flip_vertically_on_load(true);
 		//
 		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
+		s_Data.PointLightShader.reset(new Shader("../OpenGl/src/shader/pointLight_Vertex_Shader.glsl", "../OpenGl/src/shader/pointLight_Fragment_Shader.glsl"));
 		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
 		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
 		s_Data.SceneShader.reset(new Shader("../OpenGl/src/shader/screen_Vertex_Shader.glsl", "../OpenGl/src/shader/screen_Fragment_Shader.glsl"));
+		s_Data.SkyboxShader.reset(new Shader("../OpenGl/src/shader/skybox_Vertex_Shader.glsl", "../OpenGl/src/shader/skybox_Fragment_Shader.glsl"));
 		//
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
@@ -128,20 +148,26 @@ namespace Opengl {
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
 		//
+		s_Data.cube_Texture = std::make_unique<Texture>();
+		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
+		//
+		//
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1600;
 		fbSpec.Height = 900;
 		s_Data.frameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		s_Data.frameBuffer->Unbind();
 		//
-		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
+		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
-		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
 		//
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
+		s_Data.m_DrawPointLight = std::make_unique<DrawPointLight>();
+		s_Data.m_DrawPointLight->Bind();
 		s_Data.m_DrawPoint = std::make_unique<DrawPoint>();
 		s_Data.m_DrawPoint->Bind();
 		s_Data.m_DrawQuad = std::make_unique<DrawQuad>();
@@ -149,10 +175,14 @@ namespace Opengl {
 		s_Data.m_DrawTriangles = std::make_unique<DrawTriangles>();
 		s_Data.m_DrawTriangles->Bind();
 
-		s_Data.m_DrawStencil = std::make_unique<DrawPoint>();
+		s_Data.m_DrawStencil = std::make_unique<DrawPointLight>();
 		s_Data.m_DrawStencil->Bind();
+
 		s_Data.m_DrawScreenQuad = std::make_unique<DrawScreenQuad>();
 		s_Data.m_DrawScreenQuad->Bind();
+
+		s_Data.m_DrawSkybox = std::make_unique<DrawSkybox>();
+		s_Data.m_DrawSkybox->Bind();
 
 		/////////////////////////////////////////////////////////////////////
 		srand(300);
@@ -167,7 +197,7 @@ namespace Opengl {
 			s_Data.lightColors.push_back(glm::vec3(rColor, gColor, bColor));
 		}
 
-		///////////////////////////////////////////////////////////////////////////
+		//texture->setInt///////////////////////////////////////////////////////////////////
 		s_Data.CubeShader->Bind();
 		s_Data.CubeShader->SetInt("material.texture1", 0);
 		s_Data.CubeShader->SetInt("material.texture2", 1);
@@ -180,6 +210,14 @@ namespace Opengl {
 		s_Data.SceneShader->Bind();
 
 		s_Data.SceneShader->SetInt("screenTexture", 0);
+		//
+		s_Data.SkyboxShader->Bind();
+
+		s_Data.SkyboxShader->SetInt("skybox", 0);
+		//
+		s_Data.ModelShader->Bind();
+
+		s_Data.ModelShader->SetInt("skybox", 2);
 	}
 	void Renderer::EndScene()
 	{		
@@ -193,8 +231,8 @@ namespace Opengl {
 		glm::mat4 model = glm::mat4(1.0f);
 		//
 		float timeValue = glfwGetTime();
-		float blueValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
-		glm::vec4 result = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
+		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
@@ -205,10 +243,26 @@ namespace Opengl {
 		//s_Data.TrianglesShader->SetMat4("model", model);
 
 		//s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
+		//skybox///////////////////////////////////////////////////////////////////////////
+		//skybox///////////////////////////////////////////////////////////////////////////
+		//skybox///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.cube_Texture->BindCubeTexture();
+		glDepthFunc(GL_LEQUAL);
+		s_Data.SkyboxShader->Bind();
 		
-		//quad///////////////////////////////////////////////////////////////////////////
-		//quad///////////////////////////////////////////////////////////////////////////
-		//quad///////////////////////////////////////////////////////////////////////////
+		glm::mat4 view = glm::mat4(glm::mat3(App::Get().GetCamera().GetViewMatrix()));
+		glm::mat4 projection = App::Get().GetCamera().GetProjection();
+		s_Data.SkyboxShader->SetMat4("view", view);
+		s_Data.SkyboxShader->SetMat4("projection", projection);
+
+		s_Data.m_DrawSkybox->OnDraw(s_Data.SkyboxShader);
+		s_Data.SkyboxShader->Bind();
+		glDepthFunc(GL_LESS);
+
+		//grass///////////////////////////////////////////////////////////////////////////
+		//grass///////////////////////////////////////////////////////////////////////////
+		//grass///////////////////////////////////////////////////////////////////////////
 		glActiveTexture(GL_TEXTURE0);
 		s_Data.grass_Texture->Bind();
 
@@ -281,20 +335,29 @@ namespace Opengl {
 			//Renderer::DrawIndexed(s_Data.CubeVertexArray);
 			s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
 		}
-		// point//////////////////////////////////////////////////////////////////////////////
-		// point//////////////////////////////////////////////////////////////////////////////
-		// point//////////////////////////////////////////////////////////////////////////////
-		s_Data.PointShader->Bind();
+		// pointLight//////////////////////////////////////////////////////////////////////////////
+		// pointLight//////////////////////////////////////////////////////////////////////////////
+		// pointLight//////////////////////////////////////////////////////////////////////////////
+		s_Data.PointLightShader->Bind();
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, pointLightPositions[i]);
 			model = glm::scale(model, glm::vec3(0.2f)); 
-			s_Data.PointShader->SetMat4("model", model);
-			s_Data.PointShader->SetFloat3("color",s_Data.lightColors[i]);
-			s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
+			s_Data.PointLightShader->SetMat4("model", model);
+			s_Data.PointLightShader->SetFloat3("color",s_Data.lightColors[i]);
+			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
+		// point//////////////////////////////////////////////////////////////////////////////
+		// point//////////////////////////////////////////////////////////////////////////////
+		// point//////////////////////////////////////////////////////////////////////////////
+		s_Data.PointShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 5.0f,10.0f));
+		s_Data.PointShader->SetMat4("model", model);
+		s_Data.PointShader->SetFloat3("color", result);
+		s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
 		//plane地面//////////////////////////////////////////////////////////////////////////////////
@@ -310,12 +373,12 @@ namespace Opengl {
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
 		float scaleVal = 1.01f;
-		s_Data.PointShader->Bind();
+		s_Data.PointLightShader->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f) * scaleVal);
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.PointShader->SetMat4("model", model);
-		s_Data.PointShader->SetFloat3("color", s_Data.lightColors[0]);
-		s_Data.m_DrawStencil->OnDraw(s_Data.PointShader);
+		s_Data.PointLightShader->SetMat4("model", model);
+		s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[0]);
+		s_Data.m_DrawStencil->OnDraw(s_Data.PointLightShader);
 
 		glStencilMask(0xFF);
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -323,6 +386,9 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.cube_Texture->BindCubeTexture();
+
 		s_Data.ModelShader->Bind(); 
 
 		//
@@ -363,8 +429,8 @@ namespace Opengl {
 
 
 		//
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
-		model = glm::translate(model, glm::vec3(10.0f, 0.0f, 0.0f)); 
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 0.3f));
+		model = glm::translate(model, glm::vec3(10.0f, -15.0f, 0.0f)); 
 		s_Data.ModelShader->SetMat4("model", model);
 
 		s_Data.m_Model->Draw(s_Data.ModelShader);
@@ -388,6 +454,7 @@ namespace Opengl {
 			s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(0.3f, 1.0f, 1.0f, 1.0f));
 			s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
 		}
+		s_Data.QuadShader->Unbind();
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
@@ -422,6 +489,8 @@ namespace Opengl {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		glEnable(GL_PROGRAM_POINT_SIZE);
+
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -431,6 +500,15 @@ namespace Opengl {
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
 	{
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+	}
+
+	void Renderer::DrawPoints(const std::shared_ptr<VertexArray>& vertexArray)
+	{
+		glDrawElements(GL_POINTS, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+	}
+	void Renderer::DrawLines(const std::shared_ptr<VertexArray>& vertexArray)
+	{
+		glDrawElements(GL_LINE_STRIP, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
 

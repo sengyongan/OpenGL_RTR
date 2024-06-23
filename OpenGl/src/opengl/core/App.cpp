@@ -43,7 +43,7 @@ namespace Opengl {
 			// ------
 			//Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 			//Renderer::Clear();
-			if (m_EditorCamera->GetViewportWidth() != App::Get().GetWindow().GetNewWidth() &&
+			if (m_EditorCamera->GetViewportWidth() != App::Get().GetWindow().GetNewWidth() ||
 				m_EditorCamera->GetViewportHeight() != App::Get().GetWindow().GetNewHeight() &&
 				(App::Get().GetWindow().GetNewWidth() > 0 && App::Get().GetWindow().GetNewHeight() > 0)) 
 			{

@@ -116,7 +116,7 @@ namespace  Opengl {
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 		//
-		static VertexBuffer* Create(float* vertices, unsigned int size);
+		static VertexBuffer* Create(float* vertices, uint32_t size);
 	};
 
 	class IndexBuffer
@@ -129,6 +129,6 @@ namespace  Opengl {
 
 		virtual unsigned int GetCount() const = 0;
 
-		static IndexBuffer* Create(unsigned int* indices, unsigned int size);
+		static IndexBuffer* Create(uint32_t* indices, uint32_t size);
 	};
 }

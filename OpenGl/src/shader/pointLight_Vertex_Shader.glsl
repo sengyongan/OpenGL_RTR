@@ -7,5 +7,5 @@ uniform mat4 u_ViewProjection;
 void main()
 {
     gl_Position = u_ViewProjection * model * vec4(a_Position, 1.0);
-    //gl_PointSize = gl_Position.z;  
+    gl_PointSize = gl_Position.z;    
 }

@@ -1,14 +1,14 @@
 #pragma once
 //负责管理窗口
 
-#include"core.h"
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 #include<string>
 
+
+#include"core.h"
 namespace Opengl {
 
 
@@ -32,7 +32,7 @@ namespace Opengl {
 		GLFWwindow* m_Window;//实际窗口
 
 	private:
-		int m_NewWidth, m_NewHeight;
+		int m_NewWidth = 1600, m_NewHeight = 900;
 
 	};
 }

@@ -1,56 +1,37 @@
 #include "DrawPoint.h"
 
 namespace Opengl {
-	//cube(postion)
-	float point_Vertices[] = {//后，前，左，右，下，上（左下，右下，右上，右上，左上，左下）
-		-0.5f, -0.5f, -0.5f,
+	float point_Vertices[] = {//后，下，右，上，左
+		-0.5f, -0.5f, -0.5f,//后5
 		 0.5f, -0.5f, -0.5f,
 		 0.5f,  0.5f, -0.5f,
 		-0.5f,  0.5f, -0.5f,
-
-		-0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
 		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
 
-		 0.5f,  0.5f,  0.5f,
+		 -0.5f, -0.5f, 0.5f,//4
+		 0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, 0.5f,
+
+		 0.5f,  0.5f, 0.5f,//3
 		 0.5f,  0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f, 0.5f,
 
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-
+		-0.5f,  0.5f, 0.5f,//3
 		-0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f
-	};
-	//cube
-	unsigned int Point_Indices[36] = {
-		0, 1, 2, 2, 3, 0 ,
-		4,5,6,6,7,4,
-		8, 9, 10, 10, 11, 8,
-		12, 13, 14, 14, 15, 12,
-		16, 17, 18, 18, 19, 16,
-		20, 21, 22, 22, 23, 20
+		-0.5f,  0.5f, 0.5f,
+
+		-0.5f, -0.5f, 0.5f//1
 	};
 
-	struct PointData {
-		std::shared_ptr<VertexArray> PointVertexArray;
+	struct pointData {
+		std::shared_ptr<VertexArray> pointVertexArray;
 	};
-	static PointData s_PointData;
+	static pointData s_pointData;
 
 	void DrawPoint::Bind() const
 	{
-		s_PointData.PointVertexArray = std::make_unique<VertexArray>();
+		s_pointData.pointVertexArray = std::make_unique<VertexArray>();
 
 		std::shared_ptr<VertexBuffer> point_VertexBuffer;
 		point_VertexBuffer.reset(VertexBuffer::Create(point_Vertices, sizeof(point_Vertices)));
@@ -61,17 +42,17 @@ namespace Opengl {
 			}
 		);
 
-		s_PointData.PointVertexArray->AddVertexBuffer(point_VertexBuffer);
-
-		std::shared_ptr<IndexBuffer> point_IndexBuffer;
-		point_IndexBuffer.reset(IndexBuffer::Create(Point_Indices, sizeof(Point_Indices) / sizeof(unsigned int)));
-
-		s_PointData.PointVertexArray->SetIndexBuffer(point_IndexBuffer);
+		s_pointData.pointVertexArray->AddVertexBuffer(point_VertexBuffer);
 
 	}
 	void DrawPoint::OnDraw(const std::shared_ptr<Shader>& shader) const
 	{
-		s_PointData.PointVertexArray->Bind();
-		Renderer::DrawIndexed(s_PointData.PointVertexArray);
+		s_pointData.pointVertexArray->Bind();
+		//Renderer::DrawLines(s_pointData.pointVertexArray);
+		//glDrawElements(GL_LINE_STRIP, 24, GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_LINE_STRIP, 0, 16);
+
+		//glDrawArrays(GL_POINTS, 0, 3);
+		s_pointData.pointVertexArray->Unbind();
 	}
 }

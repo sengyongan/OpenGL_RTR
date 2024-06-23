@@ -11,4 +11,5 @@ namespace Opengl {
 	{
 		return new OpenGLIndexBuffer(indices, size);
 	}
+
 }

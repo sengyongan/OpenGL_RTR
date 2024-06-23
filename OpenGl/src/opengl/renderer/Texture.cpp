@@ -9,8 +9,8 @@ namespace Opengl {
 		: m_Path(path)
 	{
 		// load and create a m_RendererID 
-				// -------------------------
-		stbi_set_flip_vertically_on_load(1);//翻转为正确图像
+		stbi_set_flip_vertically_on_load(true);
+		// -------------------------
 		int width, height, channels;//加载图像文件，并将图像数据存储在data指针中，获取图像的宽度、高度和通道数。
 			
 		glGenTextures(1, &m_RendererID);
@@ -67,9 +67,14 @@ namespace Opengl {
 
 	}
 
+	void Texture::BindCubeTexture(uint32_t slot) const
+	{
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeTextureID);
+	}
+
 	unsigned int Texture::TextureFromFile(const char* path, const std::string& directory, bool gamma)
 	{
-		stbi_set_flip_vertically_on_load(1);
+		stbi_set_flip_vertically_on_load(true);
 		string filename = string(path);
 		filename = directory + '/' + filename;//放在同一个文件中//obj前面的路径+当前的名字
 		unsigned int textureID;
@@ -107,5 +112,35 @@ namespace Opengl {
 		}
 
 		return textureID;
+	}
+	unsigned int Texture::loadCubemap(vector<std::string> faces)
+	{
+		stbi_set_flip_vertically_on_load(false);
+
+		glGenTextures(1, &m_CubeTextureID);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubeTextureID);
+
+		int width, height, nrComponents;
+		for (unsigned int i = 0; i < faces.size(); i++)
+		{
+			unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
+			if (data)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				stbi_image_free(data);
+			}
+			else
+			{
+				std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+				stbi_image_free(data);
+			}
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		return m_CubeTextureID;
 	}
 }

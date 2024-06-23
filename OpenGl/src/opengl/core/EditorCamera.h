@@ -87,7 +87,7 @@ namespace Opengl {
         float m_Pitch = 0.0f, m_Yaw = 0.0f;//仰角和偏航角
 
         //
-        float m_ViewportWidth = 1600, m_ViewportHeight = 900;//视口大小
+        float m_ViewportWidth , m_ViewportHeight ;//视口大小
 
     };
 

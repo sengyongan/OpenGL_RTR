@@ -11,6 +11,8 @@ uniform sampler2D texture_diffuse1;//texture(texture_diffuse1, v_TexCoord);
 //specular贴图
 uniform sampler2D texture_specular1;
 
+uniform samplerCube skybox;
+
 //光泽度
 uniform float shininess;
 
@@ -75,9 +77,18 @@ void main()
     for(int i = 0; i < 10; i++)
         result += CalcPointLight(pointLights[i], norm, v_Position, viewPos);
 
-    result += CalcSpotLight(spotLight, norm, v_Position, viewPos);    
+    result += CalcSpotLight(spotLight, norm, v_Position, viewPos);   
     
-    FragColor = vec4(result, 1.0);//最终片段颜色
+    //
+    //vec3 I = normalize(v_Position - constVal.camera_Position);
+    //vec3 R = reflect(I, norm);
+    //FragColor = vec4(texture(skybox, R).rgb, 1.0);
+
+    float ratio = 1.00 / 1.52;
+    vec3 I = normalize(v_Position - constVal.camera_Position);
+    vec3 R = refract(I, norm, ratio);
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+    //FragColor *= vec4(result, 1.0);//最终片段颜色
 
 }
 
