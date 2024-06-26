@@ -1369,6 +1369,7 @@
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\renderer\Uniform.h" />
+    <ClInclude Include="src\opengl\draw\DrawGeometry.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1432,5 +1433,6 @@
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\renderer\Uniform.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawGeometry.cpp" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ namespace  Opengl {
 	class Shader
 	{
 	public:
-		Shader(const char* vertexPath, const char* fragmentPath);//着色器源码路径，解读文件
+		Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);//着色器源码路径，解读文件
 		~Shader();
 
 		void Bind() const;//启用着色器程序

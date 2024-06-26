@@ -14,6 +14,7 @@
 #include"opengl/draw/DrawTriangles.h"
 #include"opengl/draw/DrawScreenQuad.h"
 #include"opengl/draw/DrawSkybox.h"
+#include"opengl/draw/DrawGeometry.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -91,6 +92,11 @@ namespace Opengl {
 		std::shared_ptr<DrawSkybox> m_DrawSkybox;
 		std::shared_ptr<Texture> cube_Texture;
 		std::shared_ptr<Shader> SkyboxShader;
+		//geometry///////////////////////////////////////////////////
+		std::shared_ptr<DrawGeometry> m_DrawGeometry;
+		std::shared_ptr<Shader> GeometryShader;
+		std::shared_ptr<Shader> ModelNormalShader;
+		
 		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> frameBuffer;
 		//Shader///////////////////////////////////////////////////
@@ -146,8 +152,12 @@ namespace Opengl {
 		s_Data.PointLightShader.reset(new Shader("../OpenGl/src/shader/pointLight_Vertex_Shader.glsl", "../OpenGl/src/shader/pointLight_Fragment_Shader.glsl"));
 		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
 		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
+		s_Data.ModelNormalShader.reset(new Shader("../OpenGl/src/shader/modelNormal_Vertex_Shader.glsl", "../OpenGl/src/shader/modelNormal_Fragment_Shader.glsl"
+		  ,"../OpenGl/src/shader/modelNormal_geometry_Shader.glsl"));
 		s_Data.SceneShader.reset(new Shader("../OpenGl/src/shader/screen_Vertex_Shader.glsl", "../OpenGl/src/shader/screen_Fragment_Shader.glsl"));
 		s_Data.SkyboxShader.reset(new Shader("../OpenGl/src/shader/skybox_Vertex_Shader.glsl", "../OpenGl/src/shader/skybox_Fragment_Shader.glsl"));
+		s_Data.GeometryShader.reset(new Shader("../OpenGl/src/shader/geometry_Vertex_Shader.glsl", "../OpenGl/src/shader/geometry_Fragment_Shader.glsl",
+			"../OpenGl/src/shader/geometry_geometry_Shader.glsl"));
 		//
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
@@ -169,7 +179,7 @@ namespace Opengl {
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
-		//
+		//init
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
 		s_Data.m_DrawPointLight = std::make_unique<DrawPointLight>();
@@ -190,6 +200,9 @@ namespace Opengl {
 		s_Data.m_DrawSkybox = std::make_unique<DrawSkybox>();
 		s_Data.m_DrawSkybox->Bind();
 
+		s_Data.m_DrawGeometry = std::make_unique<DrawGeometry>();
+		s_Data.m_DrawGeometry->Bind();
+
 		//uniformBuffer//////////////////////////////////////////////////////////
 		//uniformBuffer_BindPoint
 		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
@@ -204,6 +217,11 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.PointShader->GetShaderProgram(), uniformBlockIndex_PointShader, 0);
 		unsigned int uniformBlockIndex_ModelShader = glGetUniformBlockIndex(s_Data.ModelShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.ModelShader->GetShaderProgram(), uniformBlockIndex_ModelShader, 0);
+		unsigned int uniformBlockIndex_ModelNormalShader = glGetUniformBlockIndex(s_Data.ModelNormalShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.ModelNormalShader->GetShaderProgram(), uniformBlockIndex_ModelNormalShader, 0);
+		
+		unsigned int uniformBlockIndex_GeometryShader = glGetUniformBlockIndex(s_Data.GeometryShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.GeometryShader->GetShaderProgram(), uniformBlockIndex_GeometryShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
 
@@ -268,6 +286,15 @@ namespace Opengl {
 		//s_Data.TrianglesShader->SetMat4("model", model);
 
 		//s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
+		//geometry///////////////////////////////////////////////////////////////////////////
+		//geometry///////////////////////////////////////////////////////////////////////////
+		//geometry///////////////////////////////////////////////////////////////////////////
+		s_Data.GeometryShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+		model = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
+		s_Data.GeometryShader->SetMat4("model", model);
+
+		s_Data.m_DrawGeometry->OnDraw(s_Data.GeometryShader);
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
@@ -325,8 +352,8 @@ namespace Opengl {
 		// directional light
 		s_Data.CubeShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
 		s_Data.CubeShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
@@ -376,6 +403,10 @@ namespace Opengl {
 			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
+			//model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
+			//s_Data.PointLightShader->SetFloat3("color", glm::vec3(1.0f, 1.0f, 1.0f));
+			//s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
 		// point//////////////////////////////////////////////////////////////////////////////
@@ -431,8 +462,8 @@ namespace Opengl {
 		// directional light
 		s_Data.ModelShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
 		s_Data.ModelShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
@@ -458,10 +489,16 @@ namespace Opengl {
 		//
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
 		model = glm::translate(model, glm::vec3(5.0f, 5.0f, 0.0f)); 
-		//model = glm::translate(model, glm::vec3(10.0f, -15.0f, 0.0f)); 
 		s_Data.ModelShader->SetMat4("model", model);
 
 		s_Data.m_Model->Draw(s_Data.ModelShader);
+
+		//normal
+		//s_Data.ModelNormalShader->Bind();
+		//s_Data.ModelNormalShader->SetMat4("model", model);
+
+		//s_Data.m_Model->Draw(s_Data.ModelNormalShader);
+
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
