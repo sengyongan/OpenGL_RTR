@@ -26,8 +26,8 @@ void main()
 	//vs_out.v_Position = vec3(model * vec4(a_Position, 1.0));
     //vs_out.v_Normal = mat3(transpose(inverse(model))) * a_Normal;  
 	v_TexCoord = a_TexCoord;
-	v_Position = vec3(u_ViewProjection * model * vec4(a_Position, 1.0));
-    v_Normal = mat3(transpose(inverse(u_ViewProjection * model))) * a_Normal;  
+	v_Position = vec3( model * vec4(a_Position, 1.0));
+    v_Normal = mat3(transpose(inverse( model))) * a_Normal;  
 
     gl_Position = u_ViewProjection * model * vec4(a_Position, 1.0);
 }

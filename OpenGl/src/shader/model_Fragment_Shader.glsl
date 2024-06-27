@@ -11,7 +11,7 @@ uniform sampler2D texture_diffuse1;//texture(texture_diffuse1, v_TexCoord);
 //specularÃ˘Õº
 uniform sampler2D texture_specular1;
 
-//uniform samplerCube skybox;
+uniform samplerCube skybox;
 
 //π‚‘Û∂»
 uniform float shininess;
@@ -80,17 +80,18 @@ void main()
     result += CalcSpotLight(spotLight, norm, v_Position, viewPos);   
     
 
-    //
+    //∑¥…‰
     //vec3 I = normalize(v_Position - constVal.camera_Position);
     //vec3 R = reflect(I, norm);
     //FragColor = vec4(texture(skybox, R).rgb, 1.0);
 
-    //float ratio = 1.00 / 1.52;
-    //vec3 I = normalize(v_Position - constVal.camera_Position);
-    //vec3 R = refract(I, norm, ratio);
-    //FragColor = vec4(texture(skybox, R).rgb, 1.0);
+    //’€…‰
+    float ratio = 1.00 / 1.52;
+    vec3 I = normalize(v_Position - constVal.camera_Position);
+    vec3 R = refract(I, norm, ratio);
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
 
-    FragColor = vec4(result, 1.0);//◊Ó÷’∆¨∂Œ—’…´
+    //FragColor = vec4(result, 1.0);//◊Ó÷’∆¨∂Œ—’…´
 }
 
 //

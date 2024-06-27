@@ -15,6 +15,7 @@
 #include"opengl/draw/DrawScreenQuad.h"
 #include"opengl/draw/DrawSkybox.h"
 #include"opengl/draw/DrawGeometry.h"
+#include"opengl/draw/DrawPlanet.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -96,6 +97,10 @@ namespace Opengl {
 		std::shared_ptr<DrawGeometry> m_DrawGeometry;
 		std::shared_ptr<Shader> GeometryShader;
 		std::shared_ptr<Shader> ModelNormalShader;
+		//Planet && rock///////////////////////////////////////////////////
+		std::shared_ptr<DrawPlanet> m_DrawPlanet;
+		std::shared_ptr<Shader> PlanetShader;
+		std::shared_ptr<Shader> RockShader;
 		
 		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> frameBuffer;
@@ -127,19 +132,6 @@ namespace Opengl {
 		//uniformData_BindPoint
 		glm::mat4 ViewProjection = camera.GetViewProjection();
 		s_Data.uniformBuffer->SetData(glm::value_ptr(ViewProjection), sizeof(glm::mat4),0);
-		//
-		//s_Data.QuadShader->Bind();
-		//s_Data.QuadShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		//s_Data.TrianglesShader->Bind();
-		//s_Data.TrianglesShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		//s_Data.CubeShader->Bind();
-		//s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		//s_Data.PointLightShader->Bind();
-		//s_Data.PointLightShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		//s_Data.PointShader->Bind();
-		//s_Data.PointShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-		//s_Data.ModelShader->Bind();
-		//s_Data.ModelShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
 	}
 
@@ -158,6 +150,8 @@ namespace Opengl {
 		s_Data.SkyboxShader.reset(new Shader("../OpenGl/src/shader/skybox_Vertex_Shader.glsl", "../OpenGl/src/shader/skybox_Fragment_Shader.glsl"));
 		s_Data.GeometryShader.reset(new Shader("../OpenGl/src/shader/geometry_Vertex_Shader.glsl", "../OpenGl/src/shader/geometry_Fragment_Shader.glsl",
 			"../OpenGl/src/shader/geometry_geometry_Shader.glsl"));
+		s_Data.PlanetShader.reset(new Shader("../OpenGl/src/shader/model.vs", "../OpenGl/src/shader/model.fs"));
+		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
 		//
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
@@ -203,6 +197,9 @@ namespace Opengl {
 		s_Data.m_DrawGeometry = std::make_unique<DrawGeometry>();
 		s_Data.m_DrawGeometry->Bind();
 
+		s_Data.m_DrawPlanet = std::make_unique<DrawPlanet>();
+		s_Data.m_DrawPlanet->Bind();
+
 		//uniformBuffer//////////////////////////////////////////////////////////
 		//uniformBuffer_BindPoint
 		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
@@ -219,9 +216,13 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.ModelShader->GetShaderProgram(), uniformBlockIndex_ModelShader, 0);
 		unsigned int uniformBlockIndex_ModelNormalShader = glGetUniformBlockIndex(s_Data.ModelNormalShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.ModelNormalShader->GetShaderProgram(), uniformBlockIndex_ModelNormalShader, 0);
-		
 		unsigned int uniformBlockIndex_GeometryShader = glGetUniformBlockIndex(s_Data.GeometryShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.GeometryShader->GetShaderProgram(), uniformBlockIndex_GeometryShader, 0);
+		
+		unsigned int uniformBlockIndex_PlanetShader = glGetUniformBlockIndex(s_Data.PlanetShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.PlanetShader->GetShaderProgram(), uniformBlockIndex_PlanetShader, 0);
+		unsigned int uniformBlockIndex_RockShader = glGetUniformBlockIndex(s_Data.RockShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.RockShader->GetShaderProgram(), uniformBlockIndex_RockShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
 
@@ -295,6 +296,96 @@ namespace Opengl {
 		s_Data.GeometryShader->SetMat4("model", model);
 
 		s_Data.m_DrawGeometry->OnDraw(s_Data.GeometryShader);
+		//instance///////////////////////////////////////////////////////////////////////////
+		//instance///////////////////////////////////////////////////////////////////////////
+		//instance///////////////////////////////////////////////////////////////////////////
+		//s_Data.m_DrawPlanet->OnDrawPlanet(s_Data.PlanetShader);
+		///Planet
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.cube_Texture->BindCubeTexture();
+
+		s_Data.ModelShader->Bind();
+
+		//
+		s_Data.ModelShader->SetFloat("shininess", 32.0f);
+		//
+		s_Data.ModelShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.ModelShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.ModelShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.ModelShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.ModelShader->SetFloat("constVal.quadratic", 0.032f);
+		//
+
+		// directional light
+		s_Data.ModelShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.ModelShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// point light 1
+		for (int i = 0; i < 10; i++) {
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
+
+		// spotLight
+
+		s_Data.ModelShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.ModelShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.ModelShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		s_Data.ModelShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.ModelShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+		s_Data.m_DrawPlanet->OnDrawPlanet(s_Data.ModelShader);
+
+		///Rock
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.cube_Texture->BindCubeTexture();
+
+		s_Data.RockShader->Bind();
+
+		//
+		s_Data.RockShader->SetFloat("shininess", 32.0f);
+		//
+		s_Data.RockShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.RockShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.RockShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.RockShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.RockShader->SetFloat("constVal.quadratic", 0.032f);
+		//
+
+		// directional light
+		s_Data.RockShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.RockShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.RockShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.RockShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// point light 1
+		for (int i = 0; i < 10; i++) {
+			s_Data.RockShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.RockShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+
+			s_Data.RockShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.RockShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.RockShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
+
+		// spotLight
+
+		s_Data.RockShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.RockShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.RockShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		s_Data.RockShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.RockShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+		//s_Data.m_DrawPlanet->OnDrawRock(s_Data.RockShader);
+		s_Data.m_DrawPlanet->OnDrawRock(s_Data.RockShader);
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
