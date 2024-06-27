@@ -29,6 +29,7 @@ namespace Opengl {
 
         static unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false) ;//创建模型纹理
         unsigned int loadCubemap(vector<std::string> path);//创建立方体贴图
+        
 
 
     private:

@@ -5,42 +5,69 @@ namespace Opengl {
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
         : m_Specification(spec)
     {
-        Invalidate();
+
+        initMultisampleAttachment();
+        initColorAttachment();
     }
     Framebuffer::~Framebuffer()
     {
-        glDeleteFramebuffers(1, &m_RendererID);
+        //glDeleteFramebuffers(1, &m_MultisampleRendererID);
     }
-    void Framebuffer::Invalidate()
+    void Framebuffer::initMultisampleAttachment()
     {
 
-        glGenFramebuffers(1, &m_RendererID);//创建帧缓冲
-        glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-        //////////////////////////////////////////////////////////////////////////////////////////////
-        glGenTextures(1, &m_ColorAttachment);
-        glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
+        glGenFramebuffers(1, &m_MultisampleRendererID);//创建帧缓冲
+        glBindFramebuffer(GL_FRAMEBUFFER, m_MultisampleRendererID);
+        ///ColorAttachment////////////////////////////////////////////////////////////////////////////////
+        glGenTextures(1, &m_MultisampleColorAttachment);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_MultisampleColorAttachment);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, m_Specification.Width, m_Specification.Height, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_MultisampleColorAttachment, 0);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width,m_Specification.Height, 0,GL_RGBA, GL_UNSIGNED_BYTE, nullptr);//纹理对象分配空间
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);//绑定到帧缓冲
-
-        //////////////////////////////////////////////////////////////////////////////////////////////
+        ///rendererBufferObj///////////////////////////////////////////////////////////////////////////////
         uint32_t rendererBufferObj;
         glGenRenderbuffers(1, &rendererBufferObj);
         glBindRenderbuffer(GL_RENDERBUFFER, rendererBufferObj);
-
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rendererBufferObj);
+
+
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;        
+            std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
         //
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    void Framebuffer::Bind()
+    void Framebuffer::initColorAttachment()
+    {
+        // configure second post-processing framebuffer
+        glGenFramebuffers(1, &m_RendererID);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+        // create a color attachment texture
+        glGenTextures(1, &m_ColorAttachment);
+        glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Specification.Width, m_Specification.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);	// we only need a color buffer
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    void Framebuffer::BindMultisample()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_MultisampleRendererID);
+
+    }
+    void Framebuffer::BindRendererID()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-
+    }
+    void Framebuffer::BindMultisampleTexture()
+    {
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_MultisampleColorAttachment);
     }
     void Framebuffer::BindTexture()
     {
@@ -49,6 +76,13 @@ namespace Opengl {
     void Framebuffer::Unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    }
+    void Framebuffer::BlitFramebuffer()
+    {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_MultisampleRendererID);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_RendererID);
+        glBlitFramebuffer(0, 0, m_Specification.Width, m_Specification.Height, 0, 0, m_Specification.Width, m_Specification.Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     }
     void Framebuffer::framebuffer_size()
@@ -63,7 +97,8 @@ namespace Opengl {
         m_Specification.Width = App::Get().GetWindow().GetNewWidth();
         m_Specification.Height = App::Get().GetWindow().GetNewHeight();
 
-        Invalidate();
+        initMultisampleAttachment();
+        initColorAttachment();
 
     }
 }

@@ -81,6 +81,7 @@ namespace Opengl {
 		std::shared_ptr<Texture> Texture3;
 		std::shared_ptr<Texture> grass_Texture;
 		std::shared_ptr<Texture> window_Texture;
+		std::shared_ptr<Texture> metal_Texture;
 		//skybox///////////////////////////////////////////////////
 		vector<std::string> CubeTexturePath{
 			"../OpenGl/resources/skybox/right.jpg",
@@ -103,7 +104,8 @@ namespace Opengl {
 		std::shared_ptr<Shader> RockShader;
 		
 		//FrameBuffer//////////////////////////////////////////////
-		std::shared_ptr<Framebuffer> frameBuffer;
+		std::shared_ptr<Framebuffer> Multisample_FrameBuffer;
+		std::shared_ptr<Texture> Screen_Texture;
 		//Shader///////////////////////////////////////////////////
 		//quad
 		std::shared_ptr<Shader> QuadShader;
@@ -158,6 +160,7 @@ namespace Opengl {
 		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
+		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png");
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 		//
@@ -165,8 +168,11 @@ namespace Opengl {
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1600;
 		fbSpec.Height = 900;
-		s_Data.frameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		s_Data.frameBuffer->Unbind();
+		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		//s_Data.FrameBuffer->initColorAttachment();
+		//s_Data.FrameBuffer->Unbind();
 		//
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
@@ -265,15 +271,16 @@ namespace Opengl {
 	}
 	void Renderer::EndScene()
 	{		
-		//		
-		s_Data.frameBuffer->framebuffer_size();
+		//Multisample_FrameBuffer		
+		s_Data.Multisample_FrameBuffer->framebuffer_size();
 
-		s_Data.frameBuffer->Bind();
-
+		s_Data.Multisample_FrameBuffer->Unbind();
+		s_Data.Multisample_FrameBuffer->BindMultisample();
+		//init
 		Renderer::Clear();//需要放在这个位置，清除自己的帧缓冲
 		//
 		glm::mat4 model = glm::mat4(1.0f);
-		//
+		//GreenValue
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
@@ -416,21 +423,17 @@ namespace Opengl {
 		s_Data.QuadShader->SetMat4("model", model);
 
 		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
-		//
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+
 		glActiveTexture(GL_TEXTURE0);
-		s_Data.Texture1->Bind();
-		glActiveTexture(GL_TEXTURE1);
-		s_Data.Texture2->Bind();
-		glActiveTexture(GL_TEXTURE2);
-		s_Data.Texture3->Bind();
-		glActiveTexture(GL_TEXTURE3);
-		s_Data.Texture3->Bind();
-		//
+		s_Data.metal_Texture->Bind();
+
 		s_Data.CubeShader->Bind();
-		//
+
 		s_Data.CubeShader->SetFloat("material.shininess", 32.0f);
 		//
 		s_Data.CubeShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
@@ -438,6 +441,7 @@ namespace Opengl {
 		s_Data.CubeShader->SetFloat("constVal.constant", 1.0f);
 		s_Data.CubeShader->SetFloat("constVal.linear", 0.09f);
 		s_Data.CubeShader->SetFloat("constVal.quadratic", 0.032f);
+		s_Data.CubeShader->SetFloat("constVal.blinn", true);
 		//
 
 		// directional light
@@ -448,7 +452,7 @@ namespace Opengl {
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
-			s_Data.CubeShader->SetFloat3("pointLights["+ std::to_string(i) +"].position", pointLightPositions[i]);
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
 			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
@@ -465,6 +469,39 @@ namespace Opengl {
 		s_Data.CubeShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
 		s_Data.CubeShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
+		//
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.CubeShader->SetMat4("model", model);
+		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+		//
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		float scaleVal = 1.01f;
+		s_Data.PointLightShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f) * scaleVal);
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.PointLightShader->SetMat4("model", model);
+		s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[0]);
+		s_Data.m_DrawStencil->OnDraw(s_Data.PointLightShader);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
+		//
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.Texture1->Bind();
+		glActiveTexture(GL_TEXTURE1);
+		s_Data.Texture2->Bind();
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.Texture3->Bind();
+		glActiveTexture(GL_TEXTURE3);
+		s_Data.Texture3->Bind();
+		//
+		s_Data.CubeShader->Bind();
 		//
 		//
 		
@@ -507,30 +544,6 @@ namespace Opengl {
 		s_Data.PointShader->SetMat4("model", model);
 		s_Data.PointShader->SetFloat3("color", result);
 		s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
-
-		s_Data.CubeShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f));
-		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.CubeShader->SetMat4("model", model);
-		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
-		//
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		float scaleVal = 1.01f;
-		s_Data.PointLightShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 1.0f, 20.0f) * scaleVal);
-		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.PointLightShader->SetMat4("model", model);
-		s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[0]);
-		s_Data.m_DrawStencil->OnDraw(s_Data.PointLightShader);
-
-		glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
@@ -614,18 +627,21 @@ namespace Opengl {
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
-		s_Data.frameBuffer->Unbind();
-		glDisable(GL_DEPTH_TEST);
 
+		s_Data.Multisample_FrameBuffer->BlitFramebuffer();
+		s_Data.Multisample_FrameBuffer->Unbind();
+
+		glDisable(GL_DEPTH_TEST);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
 		glClear(GL_COLOR_BUFFER_BIT);
-
+		//DrawQuad
 		s_Data.SceneShader->Bind();
 		s_Data.m_DrawScreenQuad->Bind();
 		s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
 		s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
 
-		s_Data.frameBuffer->BindTexture();
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.Multisample_FrameBuffer->BindTexture();
 
 		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
 
@@ -648,6 +664,8 @@ namespace Opengl {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_PROGRAM_POINT_SIZE);
+
+		//glEnable(GL_MULTISAMPLE);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
