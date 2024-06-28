@@ -10,7 +10,7 @@ namespace Opengl {
 	class Texture {
     public:
         Texture() {};
-		Texture(const string& path);//创建一个纹理
+		Texture(const string& path, bool gammaCorrection = false);//创建一个纹理
 		~Texture();
 
         uint32_t GetWidth() const  { return m_Width; }

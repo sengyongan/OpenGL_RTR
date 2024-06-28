@@ -19,7 +19,8 @@ namespace Opengl {
 		static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray);
 		static void DrawPoints(const std::shared_ptr<VertexArray>& vertexArray);
 		static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray);
-			
+		
+		static void processInput(GLFWwindow* window);
 		//temp
 
 

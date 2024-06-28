@@ -5,7 +5,7 @@
 #include "stb_image.h"
 
 namespace Opengl {
-	Texture::Texture(const std::string& path)
+	Texture::Texture(const std::string& path, bool gammaCorrection)
 		: m_Path(path)
 	{
 		// load and create a m_RendererID 
@@ -23,14 +23,17 @@ namespace Opengl {
 			m_Width = width;
 			m_Height = height;
 			//channels
+			GLenum internalFormat;
 			GLenum  dataFormat = 0;//Format格式
 			if (channels == 1) {//图片有透明通道
-				dataFormat = GL_RED;
+				internalFormat = dataFormat = GL_RED;
 			}
 			else if (channels == 3) {
+				internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
 				dataFormat = GL_RGB;
 			}
 			else if (channels == 4) {
+				internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
 				dataFormat = GL_RGBA;
 			}
 			m_DataFormat = dataFormat;
@@ -48,7 +51,7 @@ namespace Opengl {
 			//为绑定的纹理对象创建纹理
 			//(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
 			
-			glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat , width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 		else

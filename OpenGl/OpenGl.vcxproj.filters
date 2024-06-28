@@ -1371,6 +1371,7 @@
     <ClInclude Include="src\opengl\renderer\Uniform.h" />
     <ClInclude Include="src\opengl\draw\DrawGeometry.h" />
     <ClInclude Include="src\opengl\draw\DrawPlanet.h" />
+    <ClInclude Include="src\opengl\draw\DrawGamma.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1436,5 +1437,6 @@
     <ClCompile Include="src\opengl\renderer\Uniform.cpp" />
     <ClCompile Include="src\opengl\draw\DrawGeometry.cpp" />
     <ClCompile Include="src\opengl\draw\DrawPlanet.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawGamma.cpp" />
   </ItemGroup>
 </Project>

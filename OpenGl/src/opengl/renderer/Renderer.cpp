@@ -16,6 +16,7 @@
 #include"opengl/draw/DrawSkybox.h"
 #include"opengl/draw/DrawGeometry.h"
 #include"opengl/draw/DrawPlanet.h"
+#include"opengl/draw/DrawGamma.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -24,7 +25,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Opengl {
-
+	bool blinn = true;
+	//
+	bool gammaEnabled = false;
+	bool gammaKeyPressed = false;
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
@@ -62,7 +66,18 @@ namespace Opengl {
 		glm::vec3(-2.3f,  -3.5f, -0.0f),
 		glm::vec3(-2.0f,  -3.5f, -0.6f)
 	};
-
+	glm::vec3 lightPositions[] = {
+	   glm::vec3(-3.0f, -5.0f, 30.0f),
+	   glm::vec3(-1.0f, -5.0f, 30.0f),
+	   glm::vec3(1.0f,  -5.0f, 30.0f),
+	   glm::vec3(3.0f,  -5.0f, 30.0f)
+	};
+	glm::vec3 lightColors[] = {
+		glm::vec3(0.25),
+		glm::vec3(0.50),
+		glm::vec3(0.75),
+		glm::vec3(1.00)
+	};
 	//RendererData
 	struct RendererData {
 		//Draw/////////////////////////////////////////////////////
@@ -106,6 +121,10 @@ namespace Opengl {
 		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> Multisample_FrameBuffer;
 		std::shared_ptr<Texture> Screen_Texture;
+		//Gamma//////////////////////////////////////////////
+		std::shared_ptr<Shader> GammaShader;
+		std::shared_ptr<DrawGamma> m_DrawGamma;
+
 		//Shader///////////////////////////////////////////////////
 		//quad
 		std::shared_ptr<Shader> QuadShader;
@@ -154,13 +173,15 @@ namespace Opengl {
 			"../OpenGl/src/shader/geometry_geometry_Shader.glsl"));
 		s_Data.PlanetShader.reset(new Shader("../OpenGl/src/shader/model.vs", "../OpenGl/src/shader/model.fs"));
 		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
+		s_Data.GammaShader.reset(new Shader("../OpenGl/src/newShader/gamma.vs", "../OpenGl/src/newShader/gamma.fs"));
 		//
-		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
+		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png",gammaEnabled);
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
-		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
+		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png", gammaEnabled);
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
-		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png");
+		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", gammaEnabled);
+
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 		//
@@ -206,6 +227,9 @@ namespace Opengl {
 		s_Data.m_DrawPlanet = std::make_unique<DrawPlanet>();
 		s_Data.m_DrawPlanet->Bind();
 
+		s_Data.m_DrawGamma = std::make_unique<DrawGamma>();
+		s_Data.m_DrawGamma->Bind();
+
 		//uniformBuffer//////////////////////////////////////////////////////////
 		//uniformBuffer_BindPoint
 		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
@@ -224,11 +248,13 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.ModelNormalShader->GetShaderProgram(), uniformBlockIndex_ModelNormalShader, 0);
 		unsigned int uniformBlockIndex_GeometryShader = glGetUniformBlockIndex(s_Data.GeometryShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.GeometryShader->GetShaderProgram(), uniformBlockIndex_GeometryShader, 0);
-		
 		unsigned int uniformBlockIndex_PlanetShader = glGetUniformBlockIndex(s_Data.PlanetShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.PlanetShader->GetShaderProgram(), uniformBlockIndex_PlanetShader, 0);
 		unsigned int uniformBlockIndex_RockShader = glGetUniformBlockIndex(s_Data.RockShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.RockShader->GetShaderProgram(), uniformBlockIndex_RockShader, 0);
+		
+		unsigned int uniformBlockIndex_GammaShader = glGetUniformBlockIndex(s_Data.GammaShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.GammaShader->GetShaderProgram(), uniformBlockIndex_GammaShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
 
@@ -268,9 +294,14 @@ namespace Opengl {
 		//s_Data.ModelShader->Bind();
 
 		//s_Data.ModelShader->SetInt("skybox", 2);
+		s_Data.GammaShader->Bind();
+
+		s_Data.GammaShader->SetInt("floorTexture", 0);
 	}
 	void Renderer::EndScene()
-	{		
+	{	
+		//input
+		processInput(App::Get().GetWindow().GetNativeWindow());
 		//Multisample_FrameBuffer		
 		s_Data.Multisample_FrameBuffer->framebuffer_size();
 
@@ -284,6 +315,21 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
+		//Gamma///////////////////////////////////////////////////////////////////////////
+		//Gamma///////////////////////////////////////////////////////////////////////////
+		//Gamma///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.metal_Texture->Bind();
+		s_Data.GammaShader->Bind();
+		glUniform3fv(glGetUniformLocation(s_Data.GammaShader->GetShaderProgram(), "lightPositions"), 4, &lightPositions[0][0]);
+		glUniform3fv(glGetUniformLocation(s_Data.GammaShader->GetShaderProgram(), "lightColors"), 4, &lightColors[0][0]);
+		s_Data.GammaShader->SetFloat3("viewPos", App::Get().GetCamera().GetPosition());
+		s_Data.GammaShader->SetInt("gamma", gammaEnabled);
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, 35.0f));
+		s_Data.GammaShader->SetMat4("model", model);
+		s_Data.m_DrawGamma->OnDraw(s_Data.GammaShader);
+		 
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
@@ -441,7 +487,8 @@ namespace Opengl {
 		s_Data.CubeShader->SetFloat("constVal.constant", 1.0f);
 		s_Data.CubeShader->SetFloat("constVal.linear", 0.09f);
 		s_Data.CubeShader->SetFloat("constVal.quadratic", 0.032f);
-		s_Data.CubeShader->SetFloat("constVal.blinn", true);
+		s_Data.CubeShader->SetFloat("constVal.blinn", blinn);
+		s_Data.CubeShader->SetFloat("constVal.gamma", gammaEnabled);
 		//
 
 		// directional light
@@ -685,6 +732,20 @@ namespace Opengl {
 	void Renderer::DrawLines(const std::shared_ptr<VertexArray>& vertexArray)
 	{
 		glDrawElements(GL_LINE_STRIP, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+	}
+
+	void Renderer::processInput(GLFWwindow* window)
+	{
+		//Gamma
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !gammaKeyPressed)
+		{
+			gammaEnabled = !gammaEnabled;//是否启用
+			gammaKeyPressed = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)//松开按键执行
+		{
+			gammaKeyPressed = false;
+		}
 	}
 
 

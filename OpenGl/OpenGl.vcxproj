@@ -114,6 +114,7 @@
     <ClInclude Include="src\opengl\core\core.h" />
     <ClInclude Include="src\opengl\core\main.h" />
     <ClInclude Include="src\opengl\draw\DrawCube.h" />
+    <ClInclude Include="src\opengl\draw\DrawGamma.h" />
     <ClInclude Include="src\opengl\draw\DrawGeometry.h" />
     <ClInclude Include="src\opengl\draw\DrawPlanet.h" />
     <ClInclude Include="src\opengl\draw\DrawPoint.h" />
@@ -557,6 +558,7 @@
     <ClCompile Include="src\opengl\core\Input.cpp" />
     <ClCompile Include="src\opengl\core\Window.cpp" />
     <ClCompile Include="src\opengl\draw\DrawCube.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawGamma.cpp" />
     <ClCompile Include="src\opengl\draw\DrawGeometry.cpp" />
     <ClCompile Include="src\opengl\draw\DrawPlanet.cpp" />
     <ClCompile Include="src\opengl\draw\DrawPoint.cpp" />

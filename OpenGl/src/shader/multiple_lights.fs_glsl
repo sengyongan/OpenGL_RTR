@@ -55,6 +55,7 @@ struct ConstVal{
     float linear;
     float quadratic;
     bool blinn;//Blinn-Phong
+    bool gamma;
 };
 //
 uniform Material material;
@@ -71,6 +72,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 float near = 0.1; 
 float far  = 1000.0; 
 
+//
 float LinearizeDepth(float depth) 
 {
     float z = depth * 2.0 - 1.0; // back to NDC 
@@ -79,6 +81,7 @@ float LinearizeDepth(float depth)
 //
 void main()
 {
+
     vec3 viewPos = normalize(constVal.camera_Position - v_Position);//视线
     vec3 norm = normalize(v_Normal);//片段modle后的法线
 
@@ -88,8 +91,14 @@ void main()
         result += CalcPointLight(pointLights[i], norm, v_Position, viewPos);
 
     result += CalcSpotLight(spotLight, norm, v_Position, viewPos);    
-    
-    FragColor = vec4(result, 1.0);//最终片段颜色
+
+   
+    //if(constVal.gamma){
+    //    vec3 x = pow(result, vec3(1.0/2.2));
+    //    FragColor = vec4(x, 1.0);
+    //}
+    //else
+        FragColor = vec4(result, 1.0);//最终片段颜色
 
     //float depth = (LinearizeDepth(gl_FragCoord.z)-near)/ (far-near);
     //FragColor = vec4(vec3(depth), 1.0);
@@ -118,8 +127,8 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     }
 
     //计算影响
-    vec3 ambient = light.ambient * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
-    vec3 diffuse = light.diffuse * diff * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
+    vec3 ambient = light.ambient * texture(material.texture1, v_TexCoord).rgb;
+    vec3 diffuse = light.diffuse * diff * texture(material.texture1, v_TexCoord).rgb;
     vec3 specular = light.specular * spec * vec3(texture(material.specular_Texture, v_TexCoord));
 
     return (ambient + diffuse + specular);
@@ -144,10 +153,11 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
     // attenuation衰减
     float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (constVal.constant + constVal.linear * distance + constVal.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (constVal.constant + constVal.linear * distance + constVal.quadratic * (distance * distance));   
+    //float attenuation = 1.0 / (constVal.gamma ? distance * distance : distance);
     //计算影响
-    vec3 ambient = light.ambient * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
-    vec3 diffuse = light.color * light.diffuse * diff * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
+    vec3 ambient = light.ambient * texture(material.texture1, v_TexCoord).rgb;
+    vec3 diffuse = light.color * light.diffuse * diff * texture(material.texture1, v_TexCoord).rgb;
     vec3 specular = light.color * light.specular * spec * vec3(texture(material.specular_Texture, v_TexCoord));
     ambient *= attenuation;
     diffuse *= attenuation ;
@@ -175,13 +185,14 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     // attenuation
     float distance = length(constVal.camera_Position - fragPos);
     float attenuation = 1.0 / (constVal.constant + constVal.linear * distance + constVal.quadratic * (distance * distance));    
+    //float attenuation = 1.0 / (constVal.gamma ? distance * distance : distance);
     // spotlight intensity
     float theta = dot(lightDir, normalize(-constVal.camera_Direction)); 
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
     //计算影响
-    vec3 ambient = light.ambient * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
-    vec3 diffuse = light.diffuse * diff * mix(texture(material.texture1, v_TexCoord), texture(material.texture2, v_TexCoord), 0.0).rgb;
+    vec3 ambient = light.ambient * texture(material.texture1, v_TexCoord).rgb;
+    vec3 diffuse = light.diffuse * diff * texture(material.texture1, v_TexCoord).rgb;
     vec3 specular = light.specular * spec * vec3(texture(material.specular_Texture, v_TexCoord));
     ambient *= attenuation * intensity;
     diffuse *= attenuation * intensity;
