@@ -59,6 +59,7 @@ namespace Opengl {
 			std::cout << "Failed to load texture" << std::endl;
 		}
 		stbi_image_free(data);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	Texture::~Texture()
 	{
@@ -114,7 +115,9 @@ namespace Opengl {
 			stbi_image_free(data);
 		}
 
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return textureID;
+
 	}
 	unsigned int Texture::loadCubemap(vector<std::string> faces)
 	{
@@ -143,6 +146,7 @@ namespace Opengl {
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 		return m_CubeTextureID;
 	}

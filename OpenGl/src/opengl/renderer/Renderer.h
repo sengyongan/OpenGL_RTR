@@ -20,6 +20,8 @@ namespace Opengl {
 		static void DrawPoints(const std::shared_ptr<VertexArray>& vertexArray);
 		static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray);
 		
+		static void DrawScene();
+
 		static void processInput(GLFWwindow* window);
 		//temp
 

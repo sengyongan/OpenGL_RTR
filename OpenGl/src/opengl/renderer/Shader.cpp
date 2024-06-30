@@ -64,7 +64,7 @@ namespace Opengl {
 		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragmentShader, 1, &fShaderCode, 0);
 		glCompileShader(fragmentShader);
-		checkCompileErrors(fragmentShader, "FRAGMENT");
+		checkCompileErrors(fragmentShader, "FRAGMENT", vertexPath);
 		//
 		// if geometry shader is given, compile geometry shader
 		unsigned int geometry;
@@ -74,7 +74,7 @@ namespace Opengl {
 			geometry = glCreateShader(GL_GEOMETRY_SHADER);
 			glShaderSource(geometry, 1, &gShaderCode, NULL);
 			glCompileShader(geometry);
-			checkCompileErrors(geometry, "GEOMETRY");
+			checkCompileErrors(geometry, "GEOMETRY", fragmentPath);
 		}
 		//////////////////////////////////////////////////////////////////////////////////
 		//link shaders program///////////////////////////////////////////////////
@@ -85,7 +85,7 @@ namespace Opengl {
 		if (geometryPath != nullptr)
 			glAttachShader(m_RendererID, geometry);
 		glLinkProgram(m_RendererID);
-		checkCompileErrors(m_RendererID, "PROGRAM");
+		checkCompileErrors(m_RendererID, "PROGRAM", geometryPath);
 		//delete
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
@@ -107,7 +107,7 @@ namespace Opengl {
 		glUseProgram(0);
 	}
 
-	void Shader::checkCompileErrors(unsigned int shader, std::string type)
+	void Shader::checkCompileErrors(unsigned int shader, std::string type, const char* vertexPath , const char* fragmentPath , const char* geometryPath )
 	{
 		int success;
 		char infoLog[1024];
@@ -117,7 +117,8 @@ namespace Opengl {
 			if (!success)
 			{
 				glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-				std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << std::endl;
+				std::cout << vertexPath <<  "\n -- --------------------------------------------------- -- " << std::endl;
 			}
 		}
 		else//×ÅÉ«Æ÷³ÌÐò
@@ -127,6 +128,7 @@ namespace Opengl {
 			{
 				glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
 				std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+
 			}
 		}
 	}

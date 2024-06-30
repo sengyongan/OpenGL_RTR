@@ -43,7 +43,7 @@ namespace  Opengl {
 	private:
 		unsigned int m_RendererID;//着色器程序
 	private:
-		void checkCompileErrors(unsigned int shader, std::string type);//检查是否编译错误
+		void checkCompileErrors(unsigned int shader, std::string type, const char* vertexPath = nullptr , const char* fragmentPath = nullptr, const char* geometryPath = nullptr);//检查是否编译错误
 
 	};
 

@@ -29,6 +29,11 @@ namespace Opengl {
 	//
 	bool gammaEnabled = false;
 	bool gammaKeyPressed = false;
+	float near_plane = 1.0f, far_plane = 7.5f;
+	//ShadowMap
+	glm::mat4 lightProjection, lightView;//光空间矩阵
+	glm::mat4 lightSpaceMatrix;//视图投影矩阵
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
@@ -97,6 +102,7 @@ namespace Opengl {
 		std::shared_ptr<Texture> grass_Texture;
 		std::shared_ptr<Texture> window_Texture;
 		std::shared_ptr<Texture> metal_Texture;
+		std::shared_ptr<Texture> metalGamma_Texture;
 		//skybox///////////////////////////////////////////////////
 		vector<std::string> CubeTexturePath{
 			"../OpenGl/resources/skybox/right.jpg",
@@ -121,9 +127,16 @@ namespace Opengl {
 		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> Multisample_FrameBuffer;
 		std::shared_ptr<Texture> Screen_Texture;
+		std::shared_ptr<Shader> SceneShader;
+		//Shadow//////////////////////////////////////////////
+
+		std::shared_ptr<Framebuffer> Shadow_FrameBuffer;
+		std::shared_ptr<DrawPoint> m_ShadowDrawPoint;
 		//Gamma//////////////////////////////////////////////
 		std::shared_ptr<Shader> GammaShader;
 		std::shared_ptr<DrawGamma> m_DrawGamma;
+		//ShadowMap//////////////////////////////////////////////
+		std::shared_ptr<Shader> ShadowShader;
 
 		//Shader///////////////////////////////////////////////////
 		//quad
@@ -137,11 +150,9 @@ namespace Opengl {
 		std::vector<glm::vec3> lightColors;/////////////
 		//point
 		std::shared_ptr<Shader> PointShader;
-		//modle
+		//modle///////////////////////////////////////////////////
 		std::shared_ptr<Shader> ModelShader;
 		std::shared_ptr<Model> m_Model;
-		//
-		std::shared_ptr<Shader> SceneShader;
 		//UniformBuffer////////////////////////////////////////////
 		std::shared_ptr<Uniform> uniformBuffer;
 	};
@@ -174,13 +185,15 @@ namespace Opengl {
 		s_Data.PlanetShader.reset(new Shader("../OpenGl/src/shader/model.vs", "../OpenGl/src/shader/model.fs"));
 		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
 		s_Data.GammaShader.reset(new Shader("../OpenGl/src/newShader/gamma.vs", "../OpenGl/src/newShader/gamma.fs"));
+		s_Data.ShadowShader.reset(new Shader("../OpenGl/src/newShader/ShadowMap.vs", "../OpenGl/src/newShader/ShadowMap.fs"));
 		//
-		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png",gammaEnabled);
+		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
-		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png", gammaEnabled);
+		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
 		s_Data.grass_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/grass.png");
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
-		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", gammaEnabled);
+		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", false);
+		s_Data.metalGamma_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", true);
 
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
@@ -189,11 +202,15 @@ namespace Opengl {
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1600;
 		fbSpec.Height = 900;
-		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		//s_Data.Multisample_FrameBuffer->Unbind();
 		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.FrameBuffer->initColorAttachment();
 		//s_Data.FrameBuffer->Unbind();
+		s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+
+		//s_Data.Shadow_FrameBuffer->iniDepthAttachment();
+		s_Data.Shadow_FrameBuffer->Unbind();
 		//
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
@@ -277,7 +294,7 @@ namespace Opengl {
 		s_Data.CubeShader->SetInt("material.texture1", 0);
 		s_Data.CubeShader->SetInt("material.texture2", 1);
 		s_Data.CubeShader->SetInt("material.specular_Texture", 2);
-		s_Data.CubeShader->SetInt("material.texture_back", 3);
+		s_Data.CubeShader->SetInt("material.shadowMap", 3);
 		//
 		s_Data.QuadShader->Bind();
 
@@ -300,13 +317,18 @@ namespace Opengl {
 	}
 	void Renderer::EndScene()
 	{	
+
+
+
+		//Multisample_FrameBuffer		
+		//s_Data.Multisample_FrameBuffer->framebuffer_size();
+
+		//s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.Multisample_FrameBuffer->BindMultisample();
+		
+		
 		//input
 		processInput(App::Get().GetWindow().GetNativeWindow());
-		//Multisample_FrameBuffer		
-		s_Data.Multisample_FrameBuffer->framebuffer_size();
-
-		s_Data.Multisample_FrameBuffer->Unbind();
-		s_Data.Multisample_FrameBuffer->BindMultisample();
 		//init
 		Renderer::Clear();//需要放在这个位置，清除自己的帧缓冲
 		//
@@ -315,11 +337,12 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
+
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		glActiveTexture(GL_TEXTURE0);
-		s_Data.metal_Texture->Bind();
+		glBindTexture(GL_TEXTURE_2D, gammaEnabled ? s_Data.metalGamma_Texture->GetRendererID() : s_Data.metal_Texture->GetRendererID());
 		s_Data.GammaShader->Bind();
 		glUniform3fv(glGetUniformLocation(s_Data.GammaShader->GetShaderProgram(), "lightPositions"), 4, &lightPositions[0][0]);
 		glUniform3fv(glGetUniformLocation(s_Data.GammaShader->GetShaderProgram(), "lightColors"), 4, &lightColors[0][0]);
@@ -469,101 +492,76 @@ namespace Opengl {
 		s_Data.QuadShader->SetMat4("model", model);
 
 		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		//plane地面//////////////////////////////////////////////////////////////////////////////////
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
+		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
+		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
+		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
 
-		glActiveTexture(GL_TEXTURE0);
-		s_Data.metal_Texture->Bind();
+		//ShadowMap
+		lightProjection = glm::ortho((float)-App::Get().GetWindow().GetNewWidth() / 100, (float)App::Get().GetWindow().GetNewWidth() / 100,
+			(float)-App::Get().GetWindow().GetNewHeight() / 100, (float)App::Get().GetWindow().GetNewHeight() / 100, near_plane, far_plane);
+		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightSpaceMatrix = lightProjection * lightView;//T变换
 
-		s_Data.CubeShader->Bind();
+		///Shadow_Frambuffer_Draw ShadowMap
+		s_Data.Shadow_FrameBuffer->BindDepthRendererID();
+		s_Data.Shadow_FrameBuffer->framebuffer_size();
 
-		s_Data.CubeShader->SetFloat("material.shininess", 32.0f);
-		//
-		s_Data.CubeShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
-		s_Data.CubeShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
-		s_Data.CubeShader->SetFloat("constVal.constant", 1.0f);
-		s_Data.CubeShader->SetFloat("constVal.linear", 0.09f);
-		s_Data.CubeShader->SetFloat("constVal.quadratic", 0.032f);
-		s_Data.CubeShader->SetFloat("constVal.blinn", blinn);
-		s_Data.CubeShader->SetFloat("constVal.gamma", gammaEnabled);
-		//
+		//面剔除
+		//glEnable(GL_CULL_FACE);
 
-		// directional light
-		s_Data.CubeShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		s_Data.CubeShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+		//glCullFace(GL_FRONT);//正面剔除
 
-		// point light 1
-		for (int i = 0; i < 10; i++) {
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		}
+			s_Data.ShadowShader->Bind();
+			s_Data.ShadowShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			{			
+				//plane地面//////////////////////////////////////////////////////////////////////////////////
+				glm::mat4 model = glm::mat4(1.0f);
 
-		// spotLight
+				glActiveTexture(GL_TEXTURE0);
+				s_Data.metal_Texture->Bind();
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, 0);
 
-		s_Data.CubeShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-		s_Data.CubeShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		s_Data.CubeShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+				//
+				model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+				model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+				s_Data.ShadowShader->SetMat4("model", model);
+				s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
 
-		s_Data.CubeShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		s_Data.CubeShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+				// cube//////////////////////////////////////////////////////////////////////////////		//
+				glActiveTexture(GL_TEXTURE0);
+				s_Data.Texture1->Bind();
+				glActiveTexture(GL_TEXTURE1);
+				s_Data.Texture2->Bind();
+				glActiveTexture(GL_TEXTURE2);
+				s_Data.Texture3->Bind();
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, 0);
 
-		//
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.CubeShader->SetMat4("model", model);
-		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
-		//
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		float scaleVal = 1.01f;
-		s_Data.PointLightShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f) * scaleVal);
-		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.PointLightShader->SetMat4("model", model);
-		s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[0]);
-		s_Data.m_DrawStencil->OnDraw(s_Data.PointLightShader);
+				//				//		
+				for (unsigned int i = 0; i < 10; i++)
+				{
+					model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+					float angle = 20.0f * i + 1;
+					model = glm::rotate(model, glm::radians(40.0f) , glm::vec3(1.0f, 0.3f, 0.5f));
+					s_Data.ShadowShader->SetMat4("model", model);
+					s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
+				}
 
-		glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
-		// cube//////////////////////////////////////////////////////////////////////////////
-		//
-		glActiveTexture(GL_TEXTURE0);
-		s_Data.Texture1->Bind();
-		glActiveTexture(GL_TEXTURE1);
-		s_Data.Texture2->Bind();
-		glActiveTexture(GL_TEXTURE2);
-		s_Data.Texture3->Bind();
-		glActiveTexture(GL_TEXTURE3);
-		s_Data.Texture3->Bind();
-		//
-		s_Data.CubeShader->Bind();
-		//
-		//
-		
-		//s_Data.CubeVertexArray->Bind();
-		//
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-			float angle = 20.0f * i+1;
-			model = glm::rotate(model, glm::radians(40.0f) * (float)glfwGetTime(), glm::vec3(1.0f, 0.3f, 0.5f));
-			s_Data.CubeShader->SetMat4("model", model);
+			}
+		//glDisable(GL_CULL_FACE);
 
-			//Renderer::DrawIndexed(s_Data.CubeVertexArray);
-			s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
-		}
+		s_Data.Shadow_FrameBuffer->Unbind();
+		///…… Draw ……
+		Renderer::DrawScene();
+
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
@@ -582,9 +580,9 @@ namespace Opengl {
 			//model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
 			//s_Data.PointLightShader->SetFloat3("color", glm::vec3(1.0f, 1.0f, 1.0f));
 			//s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
-		// point//////////////////////////////////////////////////////////////////////////////
-		// point//////////////////////////////////////////////////////////////////////////////
-		// point//////////////////////////////////////////////////////////////////////////////
+		// point /Line  //////////////////////////////////////////////////////////////////////////////
+		// point /Line  //////////////////////////////////////////////////////////////////////////////
+		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		s_Data.PointShader->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 		model = glm::translate(model, glm::vec3(0.0f, 5.0f,10.0f));
@@ -675,23 +673,36 @@ namespace Opengl {
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 
-		s_Data.Multisample_FrameBuffer->BlitFramebuffer();
-		s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.Multisample_FrameBuffer->BlitFramebuffer();
+		//s_Data.Multisample_FrameBuffer->Unbind();
 
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
-		glClear(GL_COLOR_BUFFER_BIT);
-		//DrawQuad
-		s_Data.SceneShader->Bind();
-		s_Data.m_DrawScreenQuad->Bind();
-		s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
-		s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
+		//glDisable(GL_DEPTH_TEST);
+		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
+		//glClear(GL_COLOR_BUFFER_BIT);
+		////DrawQuad
+		//s_Data.SceneShader->Bind();
+		//s_Data.m_DrawScreenQuad->Bind();
+		//s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
+		//s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
 
-		glActiveTexture(GL_TEXTURE0);
-		s_Data.Multisample_FrameBuffer->BindTexture();
+		//glActiveTexture(GL_TEXTURE0);
+		//s_Data.Multisample_FrameBuffer->BindTexture();
 
-		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
 
+		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
+		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
+		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
+		//s_Data.Shadow_FrameBuffer->Unbind();
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//s_Data.SceneShader->Bind();
+		//s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
+		//s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
+		//s_Data.SceneShader->SetFloat("near_plane", near_plane);
+		//s_Data.SceneShader->SetFloat("far_plane", far_plane);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
+		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{
@@ -699,25 +710,21 @@ namespace Opengl {
 	}
 	void Renderer::Clear()
 	{
-
+		//深度测试
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
-
+		//模板测试
 		glEnable(GL_STENCIL_TEST);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);
-
+		//混合
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+		//点渲染模式，调整大小
 		glEnable(GL_PROGRAM_POINT_SIZE);
-
-		//glEnable(GL_MULTISAMPLE);
-
+		//清除颜色缓冲
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-
 
 	}
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
@@ -732,6 +739,113 @@ namespace Opengl {
 	void Renderer::DrawLines(const std::shared_ptr<VertexArray>& vertexArray)
 	{
 		glDrawElements(GL_LINE_STRIP, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+	}
+
+	void Renderer::DrawScene()
+	{
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+		//plane地面//////////////////////////////////////////////////////////////////////////////////
+
+		glm::mat4 model = glm::mat4(1.0f);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.metal_Texture->Bind();
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
+
+		s_Data.CubeShader->Bind();
+		s_Data.CubeShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+		s_Data.CubeShader->SetFloat("material.shininess", 32.0f);
+		//
+		s_Data.CubeShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.CubeShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.CubeShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.CubeShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.CubeShader->SetFloat("constVal.quadratic", 0.032f);
+		s_Data.CubeShader->SetFloat("constVal.blinn", blinn);
+		s_Data.CubeShader->SetFloat("constVal.gamma", gammaEnabled);
+		s_Data.CubeShader->SetFloat3("constVal.lightPos", lightPos);
+		//
+
+		// directional light
+		s_Data.CubeShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.CubeShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// point light 1
+		for (int i = 0; i < 10; i++) {
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
+
+		// spotLight
+
+		s_Data.CubeShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.CubeShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.CubeShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		s_Data.CubeShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.CubeShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+		//
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.CubeShader->SetMat4("model", model);
+		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+		//
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		float scaleVal = 1.01f;
+		s_Data.PointLightShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f) * scaleVal);
+		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+		s_Data.PointLightShader->SetMat4("model", model);
+		s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[0]);
+		s_Data.m_DrawStencil->OnDraw(s_Data.PointLightShader);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
+		// cube//////////////////////////////////////////////////////////////////////////////
+		//
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.Texture1->Bind();
+		glActiveTexture(GL_TEXTURE1);
+		s_Data.Texture2->Bind();
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.Texture3->Bind();
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
+		//
+		s_Data.CubeShader->Bind();
+		//		//
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+			float angle = 20.0f * i + 1;
+			model = glm::rotate(model, glm::radians(40.0f) , glm::vec3(1.0f, 0.3f, 0.5f));
+			s_Data.CubeShader->SetMat4("model", model);
+
+			//Renderer::DrawIndexed(s_Data.CubeVertexArray);
+			s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+		}
+
+
 	}
 
 	void Renderer::processInput(GLFWwindow* window)

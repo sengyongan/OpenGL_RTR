@@ -5,6 +5,8 @@ layout(location = 0) out vec4 FragColor;
 in vec3 v_Position;
 in vec2 v_TexCoord;
 in vec3 v_Normal;
+in vec4 FragPosLightSpace;//片段变换到光空间
+
 
 //材质
 struct Material {
@@ -13,6 +15,7 @@ struct Material {
     sampler2D texture2;
     //specular贴图
     sampler2D specular_Texture;
+    sampler2D shadowMap;
     //光泽度
     float shininess;
 }; 
@@ -56,6 +59,8 @@ struct ConstVal{
     float quadratic;
     bool blinn;//Blinn-Phong
     bool gamma;
+    //
+    vec3 lightPos;
 };
 //
 uniform Material material;
@@ -69,15 +74,50 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
+//Shadow
+float ShadowCalculation(vec4 fragPosLightSpace, float bias)
+{
+
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)采样
+    float closestDepth = texture(material.shadowMap, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(material.shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(material.shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+    return shadow;
+}
+
+
+////2Linear
 float near = 0.1; 
 float far  = 1000.0; 
 
-//
 float LinearizeDepth(float depth) 
 {
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));    
 }
+
+
 //
 void main()
 {
@@ -85,21 +125,28 @@ void main()
     vec3 viewPos = normalize(constVal.camera_Position - v_Position);//视线
     vec3 norm = normalize(v_Normal);//片段modle后的法线
 
-    vec3 result = CalcDirLight(dirLight, norm, viewPos);
+    vec3 result1 = CalcDirLight(dirLight, norm, viewPos);
 
-    for(int i = 0; i < 10; i++)
-        result += CalcPointLight(pointLights[i], norm, v_Position, viewPos);
+    vec3 result2;
+    for(int i = 0; i < 10; i++){
+        result2 += CalcPointLight(pointLights[i], norm, v_Position, viewPos);
+    }
+    vec3 result3 = CalcSpotLight(spotLight, norm, v_Position, viewPos);  
 
-    result += CalcSpotLight(spotLight, norm, v_Position, viewPos);    
+    //Shadow
+    vec3 lightDir = normalize(constVal.lightPos - v_Position);
+    float bias = max(0.02 * (1.0 - dot(norm, lightDir)), 0.005);
 
-   
-    //if(constVal.gamma){
-    //    vec3 x = pow(result, vec3(1.0/2.2));
-    //    FragColor = vec4(x, 1.0);
-    //}
-    //else
-        FragColor = vec4(result, 1.0);//最终片段颜色
+    //float bias = 0.005;
+    float shadow = ShadowCalculation(FragPosLightSpace, bias);  
+    vec3 result = (result1 + (1.0 - shadow) * (result2 + result3));
+    
+    
 
+    //vec3 result = result1 + result2 + result3;
+    FragColor = vec4(result, 1.0) * vec4(0.8,0.9,1.0,1.0);//最终片段颜色
+
+    //Linear Depth
     //float depth = (LinearizeDepth(gl_FragCoord.z)-near)/ (far-near);
     //FragColor = vec4(vec3(depth), 1.0);
 
