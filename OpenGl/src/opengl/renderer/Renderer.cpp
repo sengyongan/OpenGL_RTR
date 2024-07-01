@@ -29,14 +29,20 @@ namespace Opengl {
 	//
 	bool gammaEnabled = false;
 	bool gammaKeyPressed = false;
-	float near_plane = 1.0f, far_plane = 7.5f;
+	//float near_plane = 1.0f, far_plane = 7.5f;
 	//ShadowMap
 	glm::mat4 lightProjection, lightView;//光空间矩阵
 	glm::mat4 lightSpaceMatrix;//视图投影矩阵
-	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+
+	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+	float near_plane = 1.0f;
+	float far_plane = 25.0f;
+
+	bool shadows = true;
+	bool shadowsKeyPressed = false;
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(3.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
 		glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -132,12 +138,14 @@ namespace Opengl {
 
 		std::shared_ptr<Framebuffer> Shadow_FrameBuffer;
 		std::shared_ptr<DrawPoint> m_ShadowDrawPoint;
+		std::shared_ptr<Shader> ShadowShader;
+		//Point_ShadowMap//////////////////////////////////////////////
+		std::shared_ptr<Shader> Point_ShadowMapShader;//万象阴影贴图
+		std::shared_ptr<Shader> Point_ShadowShader;//正常渲染 + 阴影绘制
+
 		//Gamma//////////////////////////////////////////////
 		std::shared_ptr<Shader> GammaShader;
 		std::shared_ptr<DrawGamma> m_DrawGamma;
-		//ShadowMap//////////////////////////////////////////////
-		std::shared_ptr<Shader> ShadowShader;
-
 		//Shader///////////////////////////////////////////////////
 		//quad
 		std::shared_ptr<Shader> QuadShader;
@@ -169,7 +177,7 @@ namespace Opengl {
 
 	void Renderer::init()
 	{
-		//
+		//Shader
 		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
 		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
@@ -186,7 +194,12 @@ namespace Opengl {
 		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
 		s_Data.GammaShader.reset(new Shader("../OpenGl/src/newShader/gamma.vs", "../OpenGl/src/newShader/gamma.fs"));
 		s_Data.ShadowShader.reset(new Shader("../OpenGl/src/newShader/ShadowMap.vs", "../OpenGl/src/newShader/ShadowMap.fs"));
-		//
+
+		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/src/newShader/PointShadowMap.vs", "../OpenGl/src/newShader/PointShadowMap.fs", "../OpenGl/src/newShader/PointShadowMap.gs"));
+		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/src/shader/point_Shadow.vs", "../OpenGl/src/shader/point_Shadow.fs"));
+
+
+		//Texture
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
 		s_Data.Texture2 = std::make_unique<Texture>("../OpenGl/resources/textures/ChernoLogo.png");
 		s_Data.Texture3 = std::make_unique<Texture>("../OpenGl/resources/textures/container2_specular.png");
@@ -198,25 +211,32 @@ namespace Opengl {
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 		//
-		//
+		//Framebuffer
 		FramebufferSpecification fbSpec;
-		fbSpec.Width = 1600;
-		fbSpec.Height = 900;
+		//fbSpec.Width = 1600;
+		//fbSpec.Height = 900;
 		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.Multisample_FrameBuffer->Unbind();
 		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.FrameBuffer->initColorAttachment();
 		//s_Data.FrameBuffer->Unbind();
 		s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		s_Data.Shadow_FrameBuffer->initDepthCubeAttachment();
+		//s_Data.Shadow_FrameBuffer->framebuffer_size();
 
 		//s_Data.Shadow_FrameBuffer->iniDepthAttachment();
 		s_Data.Shadow_FrameBuffer->Unbind();
-		//
+
+
+
+		//Model
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
+		
+		
 		//init
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
@@ -228,22 +248,16 @@ namespace Opengl {
 		s_Data.m_DrawQuad->Bind();
 		s_Data.m_DrawTriangles = std::make_unique<DrawTriangles>();
 		s_Data.m_DrawTriangles->Bind();
-
 		s_Data.m_DrawStencil = std::make_unique<DrawPointLight>();
 		s_Data.m_DrawStencil->Bind();
-
 		s_Data.m_DrawScreenQuad = std::make_unique<DrawScreenQuad>();
 		s_Data.m_DrawScreenQuad->Bind();
-
 		s_Data.m_DrawSkybox = std::make_unique<DrawSkybox>();
 		s_Data.m_DrawSkybox->Bind();
-
 		s_Data.m_DrawGeometry = std::make_unique<DrawGeometry>();
 		s_Data.m_DrawGeometry->Bind();
-
 		s_Data.m_DrawPlanet = std::make_unique<DrawPlanet>();
 		s_Data.m_DrawPlanet->Bind();
-
 		s_Data.m_DrawGamma = std::make_unique<DrawGamma>();
 		s_Data.m_DrawGamma->Bind();
 
@@ -269,9 +283,11 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.PlanetShader->GetShaderProgram(), uniformBlockIndex_PlanetShader, 0);
 		unsigned int uniformBlockIndex_RockShader = glGetUniformBlockIndex(s_Data.RockShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.RockShader->GetShaderProgram(), uniformBlockIndex_RockShader, 0);
-		
 		unsigned int uniformBlockIndex_GammaShader = glGetUniformBlockIndex(s_Data.GammaShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.GammaShader->GetShaderProgram(), uniformBlockIndex_GammaShader, 0);
+		
+		unsigned int uniformBlockIndex_Point_ShadowShader = glGetUniformBlockIndex(s_Data.Point_ShadowShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.Point_ShadowShader->GetShaderProgram(), uniformBlockIndex_Point_ShadowShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
 
@@ -309,11 +325,16 @@ namespace Opengl {
 		s_Data.SkyboxShader->SetInt("skybox", 0);
 		//
 		//s_Data.ModelShader->Bind();
-
 		//s_Data.ModelShader->SetInt("skybox", 2);
 		s_Data.GammaShader->Bind();
 
 		s_Data.GammaShader->SetInt("floorTexture", 0);
+		//
+		s_Data.Point_ShadowShader->Bind();
+		s_Data.Point_ShadowShader->SetInt("material.texture1", 0);
+		s_Data.Point_ShadowShader->SetInt("material.texture2", 1);
+		s_Data.Point_ShadowShader->SetInt("material.specular_Texture", 2);
+		s_Data.Point_ShadowShader->SetInt("material.depthMap", 3);
 	}
 	void Renderer::EndScene()
 	{	
@@ -375,7 +396,6 @@ namespace Opengl {
 		//instance///////////////////////////////////////////////////////////////////////////
 		//instance///////////////////////////////////////////////////////////////////////////
 		//instance///////////////////////////////////////////////////////////////////////////
-		//s_Data.m_DrawPlanet->OnDrawPlanet(s_Data.PlanetShader);
 		///Planet
 		glActiveTexture(GL_TEXTURE2);
 		s_Data.cube_Texture->BindCubeTexture();
@@ -495,7 +515,7 @@ namespace Opengl {
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
-
+#if 0
 		//ShadowMap
 		lightProjection = glm::ortho((float)-App::Get().GetWindow().GetNewWidth() / 100, (float)App::Get().GetWindow().GetNewWidth() / 100,
 			(float)-App::Get().GetWindow().GetNewHeight() / 100, (float)App::Get().GetWindow().GetNewHeight() / 100, near_plane, far_plane);
@@ -510,8 +530,6 @@ namespace Opengl {
 		//glEnable(GL_CULL_FACE);
 
 		//glCullFace(GL_FRONT);//正面剔除
-
-
 			s_Data.ShadowShader->Bind();
 			s_Data.ShadowShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
 			glClear(GL_DEPTH_BUFFER_BIT);
@@ -559,9 +577,61 @@ namespace Opengl {
 		//glDisable(GL_CULL_FACE);
 
 		s_Data.Shadow_FrameBuffer->Unbind();
+
 		///…… Draw ……
 		Renderer::DrawScene();
+#endif
 
+		//lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
+		// 0. create depth cubemap transformation matrices
+		// -----------------------------------------------
+		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)1024 / (float)1024, near_plane, far_plane);
+		std::vector<glm::mat4> shadowTransforms;
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		//Renderer_CubeShadowMap
+		s_Data.Shadow_FrameBuffer->BindDepthCubeRendererID();
+		//s_Data.Shadow_FrameBuffer->framebuffer_size();
+		s_Data.Point_ShadowMapShader->Bind();
+
+		for (unsigned int i = 0; i < 6; ++i)
+			s_Data.Point_ShadowMapShader->SetMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+		s_Data.Point_ShadowMapShader->SetFloat("far_plane", far_plane);
+		s_Data.Point_ShadowMapShader->SetFloat3("lightPos", lightPos);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+			{
+				//plane地面//////////////////////////////////////////////////////////////////////////////////
+				glm::mat4 model = glm::mat4(1.0f);
+				//
+				model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+				model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+				s_Data.Point_ShadowMapShader->SetMat4("model", model);
+				s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
+
+				// cube//////////////////////////////////////////////////////////////////////////////		//
+
+				//				//		
+				for (unsigned int i = 0; i < 10; i++)
+				{
+					model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+					float angle = 20.0f * i + 1;
+					model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+					s_Data.Point_ShadowMapShader->SetMat4("model", model);
+					s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
+				}
+			}
+		s_Data.Shadow_FrameBuffer->Unbind();
+		///…… Draw ……
+
+		Renderer::DrawScene();
+
+		//Renderer_Scene
+		
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
@@ -576,10 +646,6 @@ namespace Opengl {
 			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
-			//model = glm::mat4(1.0f);
-			//model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
-			//s_Data.PointLightShader->SetFloat3("color", glm::vec3(1.0f, 1.0f, 1.0f));
-			//s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
@@ -593,8 +659,6 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
-		//glActiveTexture(GL_TEXTURE2);
-		//s_Data.cube_Texture->BindCubeTexture();
 
 		s_Data.ModelShader->Bind(); 
 
@@ -642,11 +706,6 @@ namespace Opengl {
 
 		s_Data.m_Model->Draw(s_Data.ModelShader);
 
-		//normal
-		//s_Data.ModelNormalShader->Bind();
-		//s_Data.ModelNormalShader->SetMat4("model", model);
-
-		//s_Data.m_Model->Draw(s_Data.ModelNormalShader);
 
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
@@ -758,53 +817,56 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 
-		s_Data.CubeShader->Bind();
-		s_Data.CubeShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+		s_Data.Point_ShadowShader->Bind();
 
-		s_Data.CubeShader->SetFloat("material.shininess", 32.0f);
+		s_Data.Point_ShadowShader->SetFloat("material.shininess", 32.0f);
 		//
-		s_Data.CubeShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
-		s_Data.CubeShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
-		s_Data.CubeShader->SetFloat("constVal.constant", 1.0f);
-		s_Data.CubeShader->SetFloat("constVal.linear", 0.09f);
-		s_Data.CubeShader->SetFloat("constVal.quadratic", 0.032f);
-		s_Data.CubeShader->SetFloat("constVal.blinn", blinn);
-		s_Data.CubeShader->SetFloat("constVal.gamma", gammaEnabled);
-		s_Data.CubeShader->SetFloat3("constVal.lightPos", lightPos);
+		s_Data.Point_ShadowShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.Point_ShadowShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.Point_ShadowShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.Point_ShadowShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.Point_ShadowShader->SetFloat("constVal.quadratic", 0.032f);
+
+		s_Data.Point_ShadowShader->SetFloat("constVal.blinn", blinn);
+		s_Data.Point_ShadowShader->SetFloat("constVal.gamma", gammaEnabled);
+
+		s_Data.Point_ShadowShader->SetFloat3("constVal.lightPos", lightPos);
+		s_Data.Point_ShadowShader->SetInt("constVal.shadows", shadows);
+		s_Data.Point_ShadowShader->SetFloat("constVal.far_plane", far_plane);
 		//
 
 		// directional light
-		s_Data.CubeShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		s_Data.CubeShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.CubeShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		s_Data.CubeShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+		s_Data.Point_ShadowShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.Point_ShadowShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.Point_ShadowShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.Point_ShadowShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+			s_Data.Point_ShadowShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.Point_ShadowShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-			s_Data.CubeShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			s_Data.Point_ShadowShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.Point_ShadowShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.Point_ShadowShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		}
 
 		// spotLight
 
-		s_Data.CubeShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-		s_Data.CubeShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		s_Data.CubeShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.Point_ShadowShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.Point_ShadowShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.Point_ShadowShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		s_Data.CubeShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		s_Data.CubeShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+		s_Data.Point_ShadowShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.Point_ShadowShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
 		//
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-		s_Data.CubeShader->SetMat4("model", model);
-		s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+		s_Data.Point_ShadowShader->SetMat4("model", model);
+		s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowShader);
 		//
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
@@ -830,19 +892,19 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		s_Data.Texture3->Bind();
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 		//
-		s_Data.CubeShader->Bind();
+		s_Data.Point_ShadowShader->Bind();
 		//		//
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
 			float angle = 20.0f * i + 1;
 			model = glm::rotate(model, glm::radians(40.0f) , glm::vec3(1.0f, 0.3f, 0.5f));
-			s_Data.CubeShader->SetMat4("model", model);
+			s_Data.Point_ShadowShader->SetMat4("model", model);
 
 			//Renderer::DrawIndexed(s_Data.CubeVertexArray);
-			s_Data.m_DrawCube->OnDraw(s_Data.CubeShader);
+			s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowShader);
 		}
 
 
@@ -855,11 +917,94 @@ namespace Opengl {
 		{
 			gammaEnabled = !gammaEnabled;//是否启用
 			gammaKeyPressed = true;
+
 		}
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)//松开按键执行
 		{
 			gammaKeyPressed = false;
 		}
+
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
+		{
+			shadows = !shadows;
+			shadowsKeyPressed = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+		{
+			shadowsKeyPressed = false;
+		}
+	}
+	unsigned int cubeVAO = 0;
+	unsigned int cubeVBO = 0;
+	void Renderer::renderCube()
+	{
+		// initialize (if necessary)
+		if (cubeVAO == 0)
+		{
+			float vertices[] = {
+				// back face
+				-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+				 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+				 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+				 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+				-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+				-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+				// front face
+				-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+				 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+				 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+				 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+				-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+				-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+				// left face
+				-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+				-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+				-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+				-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+				-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+				-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+				// right face
+				 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+				 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+				 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+				 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+				 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+				 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+				 // bottom face
+				 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+				  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+				  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+				  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+				 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+				 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+				 // top face
+				 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+				  1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+				  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+				  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+				 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+				 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+			};
+			glGenVertexArrays(1, &cubeVAO);
+			glGenBuffers(1, &cubeVBO);
+			// fill buffer
+			glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+			// link vertex attributes
+			glBindVertexArray(cubeVAO);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+			glEnableVertexAttribArray(2);
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+		// render Cube
+		glBindVertexArray(cubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
 	}
 
 

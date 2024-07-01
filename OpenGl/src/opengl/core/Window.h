@@ -32,7 +32,7 @@ namespace Opengl {
 		GLFWwindow* m_Window;//Êµ¼Ê´°¿Ú
 
 	private:
-		int m_NewWidth = 1600, m_NewHeight = 900;
+		int m_NewWidth = 1024, m_NewHeight = 1024;
 
 	};
 }

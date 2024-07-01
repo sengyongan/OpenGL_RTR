@@ -15,22 +15,25 @@ namespace Opengl {
     public:
         Framebuffer(const FramebufferSpecification& spec);
         ~Framebuffer();
-
+        //init
         void initMultisampleAttachment();//MSAA(抗锯齿）
-        void initColorAttachment();//普通framebuffer
-        void iniDepthAttachment();//普通framebuffer
-
+        void initColorAttachment();//
+        void iniDepthAttachment();//
+        void initDepthCubeAttachment();//
+        //bind ID
         void BindMultisample();
         void BindRendererID();
         void BindDepthRendererID();
-
+        void BindDepthCubeRendererID();
+        //bind Attach
         void BindMultisampleTexture();
         void BindTexture();
-
+        //
         void Unbind();
-
+        //移动buffer
         void BlitFramebuffer();
 
+        //Get
         uint32_t GetMultisampleRendererID() const { return m_MultisampleRendererID; };//获取颜色缓冲附件
 
         uint32_t GetRendererID() const { return m_RendererID; };//获取颜色缓冲附件
@@ -39,10 +42,12 @@ namespace Opengl {
         uint32_t GetDepthRendererID() const { return m_DepthRendererID; };//获取颜色缓冲
         uint32_t GetDepthAttachmentRendererID() const { return m_DepthMapAttachment; };//获取深度缓冲附件 
 
+        uint32_t GetDepthCubeRendererID() const { return m_DepthCubeRendererID; };//获取颜色缓冲
+        uint32_t GetDepthCubeAttachmentRendererID() const { return m_DepthMapCubeAttachment; };//获取深度缓冲附件 
 
+        //
         const FramebufferSpecification& GetSpecification() const { return m_Specification; };
-
-
+        //调整size
         void framebuffer_size();
 
 
@@ -55,6 +60,10 @@ namespace Opengl {
 
         uint32_t m_DepthRendererID;//帧缓冲id---深度附件
         uint32_t m_DepthMapAttachment;//深度附件
+
+        uint32_t m_DepthCubeRendererID;//帧缓冲id---深度立方体附件
+        uint32_t m_DepthMapCubeAttachment;//深度附件
+
 
         FramebufferSpecification m_Specification;//帧缓冲格式
     };

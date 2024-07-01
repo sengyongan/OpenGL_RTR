@@ -21,6 +21,7 @@ namespace Opengl {
 		static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray);
 		
 		static void DrawScene();
+		static void renderCube();
 
 		static void processInput(GLFWwindow* window);
 		//temp
