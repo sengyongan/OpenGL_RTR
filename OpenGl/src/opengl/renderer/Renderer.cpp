@@ -17,6 +17,7 @@
 #include"opengl/draw/DrawGeometry.h"
 #include"opengl/draw/DrawPlanet.h"
 #include"opengl/draw/DrawGamma.h"
+#include"opengl/draw/DrawTBNQuad.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -34,7 +35,7 @@ namespace Opengl {
 	glm::mat4 lightProjection, lightView;//光空间矩阵
 	glm::mat4 lightSpaceMatrix;//视图投影矩阵
 
-	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
 	float near_plane = 1.0f;
 	float far_plane = 25.0f;
 
@@ -163,6 +164,12 @@ namespace Opengl {
 		std::shared_ptr<Model> m_Model;
 		//UniformBuffer////////////////////////////////////////////
 		std::shared_ptr<Uniform> uniformBuffer;
+		//TBN////////////////////////////////////////////
+		std::shared_ptr<Shader> TBNQuadShader;
+		std::shared_ptr<DrawTBNQuad> m_DrawTBNQuad;
+		std::shared_ptr<Texture> brickWall_Texture;
+		std::shared_ptr<Texture> brickWall_Normal_Texture;
+
 	};
 	static RendererData s_Data;
 
@@ -194,9 +201,10 @@ namespace Opengl {
 		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
 		s_Data.GammaShader.reset(new Shader("../OpenGl/src/newShader/gamma.vs", "../OpenGl/src/newShader/gamma.fs"));
 		s_Data.ShadowShader.reset(new Shader("../OpenGl/src/newShader/ShadowMap.vs", "../OpenGl/src/newShader/ShadowMap.fs"));
-
 		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/src/newShader/PointShadowMap.vs", "../OpenGl/src/newShader/PointShadowMap.fs", "../OpenGl/src/newShader/PointShadowMap.gs"));
 		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/src/shader/point_Shadow.vs", "../OpenGl/src/shader/point_Shadow.fs"));
+		
+		s_Data.TBNQuadShader.reset(new Shader("../OpenGl/src/newShader/TBNquad.vs", "../OpenGl/src/newShader/TBNquad.fs"));
 
 
 		//Texture
@@ -207,6 +215,9 @@ namespace Opengl {
 		s_Data.window_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/window.png");
 		s_Data.metal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", false);
 		s_Data.metalGamma_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/metal.png", true);
+
+		s_Data.brickWall_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/brickwall.jpg..png");
+		s_Data.brickWall_Normal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/brickwall_normal.png");
 
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
@@ -230,9 +241,9 @@ namespace Opengl {
 
 
 		//Model
-		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
+		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
-		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
+		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
 		
@@ -261,6 +272,9 @@ namespace Opengl {
 		s_Data.m_DrawGamma = std::make_unique<DrawGamma>();
 		s_Data.m_DrawGamma->Bind();
 
+		s_Data.m_DrawTBNQuad = std::make_unique<DrawTBNQuad>();
+		s_Data.m_DrawTBNQuad->Bind();
+
 		//uniformBuffer//////////////////////////////////////////////////////////
 		//uniformBuffer_BindPoint
 		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
@@ -285,9 +299,11 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.RockShader->GetShaderProgram(), uniformBlockIndex_RockShader, 0);
 		unsigned int uniformBlockIndex_GammaShader = glGetUniformBlockIndex(s_Data.GammaShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.GammaShader->GetShaderProgram(), uniformBlockIndex_GammaShader, 0);
-		
 		unsigned int uniformBlockIndex_Point_ShadowShader = glGetUniformBlockIndex(s_Data.Point_ShadowShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.Point_ShadowShader->GetShaderProgram(), uniformBlockIndex_Point_ShadowShader, 0);
+
+		unsigned int uniformBlockIndex_TBNQuadShader = glGetUniformBlockIndex(s_Data.TBNQuadShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.TBNQuadShader->GetShaderProgram(), uniformBlockIndex_TBNQuadShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
 
@@ -335,6 +351,10 @@ namespace Opengl {
 		s_Data.Point_ShadowShader->SetInt("material.texture2", 1);
 		s_Data.Point_ShadowShader->SetInt("material.specular_Texture", 2);
 		s_Data.Point_ShadowShader->SetInt("material.depthMap", 3);
+		//
+		s_Data.TBNQuadShader->Bind();
+		s_Data.TBNQuadShader->SetInt("diffuseMap", 0);
+		s_Data.TBNQuadShader->SetInt("normalMap", 1);
 	}
 	void Renderer::EndScene()
 	{	
@@ -344,7 +364,7 @@ namespace Opengl {
 		//Multisample_FrameBuffer		
 		//s_Data.Multisample_FrameBuffer->framebuffer_size();
 
-		//s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.Multisample_FrameBuffer->Unbind(); 
 		//s_Data.Multisample_FrameBuffer->BindMultisample();
 		
 		
@@ -374,6 +394,28 @@ namespace Opengl {
 		s_Data.GammaShader->SetMat4("model", model);
 		s_Data.m_DrawGamma->OnDraw(s_Data.GammaShader);
 		 
+		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
+		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
+		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
+		s_Data.TBNQuadShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f));
+		model = glm::rotate(model, (GLfloat)glfwGetTime() * -0.1f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.1f));
+		s_Data.TBNQuadShader->SetMat4("model", model);
+		s_Data.TBNQuadShader->SetFloat3("lightPos", lightPos);
+		s_Data.TBNQuadShader->SetFloat3("viewPos", App::Get().GetCamera().GetPosition());
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.brickWall_Texture->Bind();
+		glActiveTexture(GL_TEXTURE1);
+		s_Data.brickWall_Normal_Texture->Bind();
+		s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
+
+
+
+		//model = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+		//model = glm::translate(model, lightPos);
+		//s_Data.TBNQuadShader->SetMat4("model", model);
+		//s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
 		//三角形///////////////////////////////////////////////////////////////////////////
@@ -660,51 +702,51 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 
-		s_Data.ModelShader->Bind(); 
+		s_Data.PlanetShader->Bind(); 
 
 		//
-		s_Data.ModelShader->SetFloat("shininess", 32.0f);
+		s_Data.PlanetShader->SetFloat("shininess", 32.0f);
 		//
-		s_Data.ModelShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
-		s_Data.ModelShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
-		s_Data.ModelShader->SetFloat("constVal.constant", 1.0f);
-		s_Data.ModelShader->SetFloat("constVal.linear", 0.09f);
-		s_Data.ModelShader->SetFloat("constVal.quadratic", 0.032f);
+		s_Data.PlanetShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.PlanetShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.PlanetShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.PlanetShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.PlanetShader->SetFloat("constVal.quadratic", 0.032f);
 		//
 
 		// directional light
-		s_Data.ModelShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		s_Data.ModelShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.ModelShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		s_Data.ModelShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+		s_Data.PlanetShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.PlanetShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.PlanetShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.PlanetShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// point light 1
 		for (int i = 0; i < 10; i++) {
-			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
-			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+			s_Data.PlanetShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.PlanetShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
 
-			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-			s_Data.ModelShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			s_Data.PlanetShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.PlanetShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.PlanetShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		}
 
 		// spotLight
 
-		s_Data.ModelShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-		s_Data.ModelShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		s_Data.ModelShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.PlanetShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.PlanetShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.PlanetShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		s_Data.ModelShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		s_Data.ModelShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+		s_Data.PlanetShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.PlanetShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
 
 
 		//
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
-		model = glm::translate(model, glm::vec3(5.0f, 5.0f, 0.0f)); 
-		s_Data.ModelShader->SetMat4("model", model);
+		model = glm::translate(model, glm::vec3(20.0f, -10.0f, 0.0f)); 
+		s_Data.PlanetShader->SetMat4("model", model);
 
-		s_Data.m_Model->Draw(s_Data.ModelShader);
+		s_Data.m_Model->Draw(s_Data.PlanetShader);
 
 
 		//window///////////////////////////////////////////////////////////////////////////

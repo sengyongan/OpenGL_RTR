@@ -122,6 +122,7 @@
     <ClInclude Include="src\opengl\draw\DrawQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawScreenQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawSkybox.h" />
+    <ClInclude Include="src\opengl\draw\DrawTBNQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawTriangles.h" />
     <ClInclude Include="src\opengl\draw\Mesh.h" />
     <ClInclude Include="src\opengl\draw\Model.h" />
@@ -566,6 +567,7 @@
     <ClCompile Include="src\opengl\draw\DrawQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawScreenQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawSkybox.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawTBNQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawTriangles.cpp" />
     <ClCompile Include="src\opengl\renderer\Buffer.cpp" />
     <ClCompile Include="src\opengl\renderer\Buffer_Abstraction.cpp" />
