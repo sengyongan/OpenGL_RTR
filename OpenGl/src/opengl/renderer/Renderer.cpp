@@ -169,6 +169,7 @@ namespace Opengl {
 		std::shared_ptr<DrawTBNQuad> m_DrawTBNQuad;
 		std::shared_ptr<Texture> brickWall_Texture;
 		std::shared_ptr<Texture> brickWall_Normal_Texture;
+		std::shared_ptr<Texture> brickWall_Depth_Texture;
 
 	};
 	static RendererData s_Data;
@@ -218,6 +219,7 @@ namespace Opengl {
 
 		s_Data.brickWall_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/brickwall.jpg..png");
 		s_Data.brickWall_Normal_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/brickwall_normal.png");
+		s_Data.brickWall_Depth_Texture = std::make_unique<Texture>("../OpenGl/resources/textures/brickwall.png");
 
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
@@ -355,6 +357,7 @@ namespace Opengl {
 		s_Data.TBNQuadShader->Bind();
 		s_Data.TBNQuadShader->SetInt("diffuseMap", 0);
 		s_Data.TBNQuadShader->SetInt("normalMap", 1);
+		s_Data.TBNQuadShader->SetInt("depthMap", 2);
 	}
 	void Renderer::EndScene()
 	{	
@@ -398,7 +401,7 @@ namespace Opengl {
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		s_Data.TBNQuadShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.50f));
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 		model = glm::rotate(model, (GLfloat)glfwGetTime() * -0.1f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.1f));
 		s_Data.TBNQuadShader->SetMat4("model", model);
@@ -408,6 +411,8 @@ namespace Opengl {
 		s_Data.brickWall_Texture->Bind();
 		glActiveTexture(GL_TEXTURE1);
 		s_Data.brickWall_Normal_Texture->Bind();
+		glActiveTexture(GL_TEXTURE2);
+		s_Data.brickWall_Depth_Texture->Bind();
 		s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
 
 
