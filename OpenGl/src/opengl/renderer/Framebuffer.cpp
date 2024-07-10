@@ -39,21 +39,24 @@ namespace Opengl {
     }
     void Framebuffer::initColorAttachment()
     {
-        // configure second post-processing framebuffer
         glGenFramebuffers(1, &m_RendererID);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-        // create a color attachment texture
+        // - Create floating point color buffer
         glGenTextures(1, &m_ColorAttachment);
         glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Specification.Width, m_Specification.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);	// we only need a color buffer
-
+        // - Create depth buffer (renderbuffer)
+        GLuint rboDepth;
+        glGenRenderbuffers(1, &rboDepth);
+        glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+        // - Attach buffers
+        glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            std::cout << "Framebuffer not complete!" << std::endl;
     }
     void Framebuffer::iniDepthAttachment()
     {

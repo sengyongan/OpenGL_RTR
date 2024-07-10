@@ -38,9 +38,12 @@ namespace Opengl {
 	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
 	float near_plane = 1.0f;
 	float far_plane = 25.0f;
-
+	//
 	bool shadows = true;
 	bool shadowsKeyPressed = false;
+	//HDR
+	GLboolean hdr = true; // Change with 'Space'
+	GLfloat exposure = 1.0f; // Change with Q and E
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(3.0f,  0.0f,  0.0f),
@@ -72,11 +75,11 @@ namespace Opengl {
 	};
 	vector<glm::vec3> windows
 	{
-		glm::vec3(-2.5f,  -3.5f, -2.0f),
-		glm::vec3(-2.3f,  -3.5f,  1.0f),
-		glm::vec3(-2.0f,  -3.5f,  0.9f),
-		glm::vec3(-2.3f,  -3.5f, -0.0f),
-		glm::vec3(-2.0f,  -3.5f, -0.6f)
+		glm::vec3(-2.5f, -3.5f, -2.0f),
+			glm::vec3(-2.3f, -3.5f, 1.0f),
+			glm::vec3(-2.0f, -3.5f, 0.9f),
+			glm::vec3(-2.3f, -3.5f, -0.0f),
+			glm::vec3(-2.0f, -3.5f, -0.6f)
 	};
 	glm::vec3 lightPositions[] = {
 	   glm::vec3(-3.0f, -5.0f, 30.0f),
@@ -89,6 +92,21 @@ namespace Opengl {
 		glm::vec3(0.50),
 		glm::vec3(0.75),
 		glm::vec3(1.00)
+	};
+	// Light sources
+	// - Positions
+	vector<glm::vec3> HDR_LightPositions {
+		glm::vec3(0.0f, 0.0f, 49.5f),
+		glm::vec3(-1.4f, -1.9f, 9.0f),
+		glm::vec3(0.0f, -1.8f, 4.0f),
+		glm::vec3(0.8f, -1.7f, 6.0f)
+	};
+	// - Colors
+	vector<glm::vec3> HDR_lightColors{
+		glm::vec3(200.0f, 200.0f, 200.0f),
+		glm::vec3(0.1f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.2f),
+		glm::vec3(0.0f, 0.1f, 0.0f)
 	};
 	//RendererData
 	struct RendererData {
@@ -113,11 +131,11 @@ namespace Opengl {
 		//skybox///////////////////////////////////////////////////
 		vector<std::string> CubeTexturePath{
 			"../OpenGl/resources/skybox/right.jpg",
-			"../OpenGl/resources/skybox/left.jpg",
-			"../OpenGl/resources/skybox/top.jpg",
-			"../OpenGl/resources/skybox/bottom.jpg",
-			"../OpenGl/resources/skybox/back.jpg",
-			"../OpenGl/resources/skybox/front.jpg"
+				"../OpenGl/resources/skybox/left.jpg",
+				"../OpenGl/resources/skybox/top.jpg",
+				"../OpenGl/resources/skybox/bottom.jpg",
+				"../OpenGl/resources/skybox/back.jpg",
+				"../OpenGl/resources/skybox/front.jpg"
 		};
 		std::shared_ptr<DrawSkybox> m_DrawSkybox;
 		std::shared_ptr<Texture> cube_Texture;
@@ -130,7 +148,7 @@ namespace Opengl {
 		std::shared_ptr<DrawPlanet> m_DrawPlanet;
 		std::shared_ptr<Shader> PlanetShader;
 		std::shared_ptr<Shader> RockShader;
-		
+
 		//FrameBuffer//////////////////////////////////////////////
 		std::shared_ptr<Framebuffer> Multisample_FrameBuffer;
 		std::shared_ptr<Texture> Screen_Texture;
@@ -159,6 +177,9 @@ namespace Opengl {
 		std::vector<glm::vec3> lightColors;/////////////
 		//point
 		std::shared_ptr<Shader> PointShader;
+		//HDR///////////////////////////////////////////////////
+		std::shared_ptr<Shader> HDRShader;
+		std::shared_ptr<Shader> HDRCubeShader;
 		//modle///////////////////////////////////////////////////
 		std::shared_ptr<Shader> ModelShader;
 		std::shared_ptr<Model> m_Model;
@@ -179,7 +200,7 @@ namespace Opengl {
 	{
 		//uniformData_BindPoint
 		glm::mat4 ViewProjection = camera.GetViewProjection();
-		s_Data.uniformBuffer->SetData(glm::value_ptr(ViewProjection), sizeof(glm::mat4),0);
+		s_Data.uniformBuffer->SetData(glm::value_ptr(ViewProjection), sizeof(glm::mat4), 0);
 
 	}
 
@@ -193,7 +214,7 @@ namespace Opengl {
 		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
 		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
 		s_Data.ModelNormalShader.reset(new Shader("../OpenGl/src/shader/modelNormal_Vertex_Shader.glsl", "../OpenGl/src/shader/modelNormal_Fragment_Shader.glsl"
-		  ,"../OpenGl/src/shader/modelNormal_geometry_Shader.glsl"));
+			, "../OpenGl/src/shader/modelNormal_geometry_Shader.glsl"));
 		s_Data.SceneShader.reset(new Shader("../OpenGl/src/shader/screen_Vertex_Shader.glsl", "../OpenGl/src/shader/screen_Fragment_Shader.glsl"));
 		s_Data.SkyboxShader.reset(new Shader("../OpenGl/src/shader/skybox_Vertex_Shader.glsl", "../OpenGl/src/shader/skybox_Fragment_Shader.glsl"));
 		s_Data.GeometryShader.reset(new Shader("../OpenGl/src/shader/geometry_Vertex_Shader.glsl", "../OpenGl/src/shader/geometry_Fragment_Shader.glsl",
@@ -204,8 +225,10 @@ namespace Opengl {
 		s_Data.ShadowShader.reset(new Shader("../OpenGl/src/newShader/ShadowMap.vs", "../OpenGl/src/newShader/ShadowMap.fs"));
 		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/src/newShader/PointShadowMap.vs", "../OpenGl/src/newShader/PointShadowMap.fs", "../OpenGl/src/newShader/PointShadowMap.gs"));
 		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/src/shader/point_Shadow.vs", "../OpenGl/src/shader/point_Shadow.fs"));
-		
 		s_Data.TBNQuadShader.reset(new Shader("../OpenGl/src/newShader/TBNquad.vs", "../OpenGl/src/newShader/TBNquad.fs"));
+
+		s_Data.HDRShader.reset(new Shader("../OpenGl/src/newShader/HDR.vs", "../OpenGl/src/newShader/HDR.fs"));
+		s_Data.HDRCubeShader.reset(new Shader("../OpenGl/src/newShader/HDRCube.vs", "../OpenGl/src/newShader/HDRCube.fs"));
 
 
 		//Texture
@@ -231,25 +254,26 @@ namespace Opengl {
 		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.Multisample_FrameBuffer->Unbind();
 		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		//s_Data.FrameBuffer->initColorAttachment();
 		//s_Data.FrameBuffer->Unbind();
+		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		s_Data.Multisample_FrameBuffer->initColorAttachment();
 		s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		s_Data.Shadow_FrameBuffer->initDepthCubeAttachment();
 		//s_Data.Shadow_FrameBuffer->framebuffer_size();
 
 		//s_Data.Shadow_FrameBuffer->iniDepthAttachment();
-		s_Data.Shadow_FrameBuffer->Unbind();
+		//s_Data.Shadow_FrameBuffer->Unbind();
 
 
 
-		//Model
+			//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
-		
-		
+
+
 		//init
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
@@ -303,11 +327,13 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.GammaShader->GetShaderProgram(), uniformBlockIndex_GammaShader, 0);
 		unsigned int uniformBlockIndex_Point_ShadowShader = glGetUniformBlockIndex(s_Data.Point_ShadowShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.Point_ShadowShader->GetShaderProgram(), uniformBlockIndex_Point_ShadowShader, 0);
-
 		unsigned int uniformBlockIndex_TBNQuadShader = glGetUniformBlockIndex(s_Data.TBNQuadShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.TBNQuadShader->GetShaderProgram(), uniformBlockIndex_TBNQuadShader, 0);
+
+		unsigned int uniformBlockIndex_HDRCubeShader = glGetUniformBlockIndex(s_Data.HDRCubeShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.HDRCubeShader->GetShaderProgram(), uniformBlockIndex_HDRCubeShader, 0);
 		//uniformBuffer_GenBuffer
-		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4) , 0);
+		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
 
 		/////////////////////////////////////////////////////////////////////
@@ -358,19 +384,24 @@ namespace Opengl {
 		s_Data.TBNQuadShader->SetInt("diffuseMap", 0);
 		s_Data.TBNQuadShader->SetInt("normalMap", 1);
 		s_Data.TBNQuadShader->SetInt("depthMap", 2);
+		//
+		s_Data.HDRShader->Bind();
+		s_Data.HDRShader->SetInt("hdrBuffer", 0);
+		s_Data.HDRCubeShader->Bind();
+		s_Data.HDRCubeShader->SetInt("diffuseTexture", 0);
 	}
 	void Renderer::EndScene()
-	{	
+	{
 
-
+		s_Data.Multisample_FrameBuffer->initColorAttachment();
 
 		//Multisample_FrameBuffer		
 		//s_Data.Multisample_FrameBuffer->framebuffer_size();
 
 		//s_Data.Multisample_FrameBuffer->Unbind(); 
 		//s_Data.Multisample_FrameBuffer->BindMultisample();
-		
-		
+
+
 		//input
 		processInput(App::Get().GetWindow().GetNativeWindow());
 		//init
@@ -381,6 +412,22 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
+
+		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
+		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
+		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE0);
+		s_Data.metal_Texture->Bind();
+		s_Data.HDRCubeShader->Bind();
+		for (GLuint i = 0; i < HDR_LightPositions.size(); i++) {
+			s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Position", HDR_LightPositions[i]);
+			s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Color", HDR_lightColors[i]);
+		}
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 25.0));
+		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 55.0f));
+		s_Data.HDRCubeShader->SetMat4("model", model);
+		s_Data.HDRCubeShader->SetInt("inverse_normals", GL_TRUE);
+		s_Data.m_DrawCube->OnDraw(s_Data.HDRCubeShader);
 
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
@@ -396,7 +443,7 @@ namespace Opengl {
 		model = glm::translate(model, glm::vec3(0.0f, -5.0f, 35.0f));
 		s_Data.GammaShader->SetMat4("model", model);
 		s_Data.m_DrawGamma->OnDraw(s_Data.GammaShader);
-		 
+
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
@@ -536,7 +583,7 @@ namespace Opengl {
 		s_Data.cube_Texture->BindCubeTexture();
 		glDepthFunc(GL_LEQUAL);
 		s_Data.SkyboxShader->Bind();
-		
+
 		glm::mat4 view = glm::mat4(glm::mat3(App::Get().GetCamera().GetViewMatrix()));
 		glm::mat4 projection = App::Get().GetCamera().GetProjection();
 		s_Data.SkyboxShader->SetMat4("view", view);
@@ -554,8 +601,8 @@ namespace Opengl {
 
 		s_Data.QuadShader->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
-		model = glm::translate(model, glm::vec3 (-5.0f, 0.0f, 0.0f));
-		s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(1.0f,1.0f,1.0f,1.0f));
+		model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 0.0f));
+		s_Data.QuadShader->SetFloat4("ourColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		s_Data.QuadShader->SetMat4("model", model);
 
 		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
@@ -577,50 +624,50 @@ namespace Opengl {
 		//glEnable(GL_CULL_FACE);
 
 		//glCullFace(GL_FRONT);//正面剔除
-			s_Data.ShadowShader->Bind();
-			s_Data.ShadowShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			{			
-				//plane地面//////////////////////////////////////////////////////////////////////////////////
-				glm::mat4 model = glm::mat4(1.0f);
+		s_Data.ShadowShader->Bind();
+		s_Data.ShadowShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		{
+			//plane地面//////////////////////////////////////////////////////////////////////////////////
+			glm::mat4 model = glm::mat4(1.0f);
 
-				glActiveTexture(GL_TEXTURE0);
-				s_Data.metal_Texture->Bind();
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, 0);
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, 0);
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, 0);
+			glActiveTexture(GL_TEXTURE0);
+			s_Data.metal_Texture->Bind();
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, 0);
 
-				//
-				model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-				model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+			//
+			model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+			model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+			s_Data.ShadowShader->SetMat4("model", model);
+			s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
+
+			// cube//////////////////////////////////////////////////////////////////////////////		//
+			glActiveTexture(GL_TEXTURE0);
+			s_Data.Texture1->Bind();
+			glActiveTexture(GL_TEXTURE1);
+			s_Data.Texture2->Bind();
+			glActiveTexture(GL_TEXTURE2);
+			s_Data.Texture3->Bind();
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			//				//		
+			for (unsigned int i = 0; i < 10; i++)
+			{
+				model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+				float angle = 20.0f * i + 1;
+				model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 				s_Data.ShadowShader->SetMat4("model", model);
 				s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
-
-				// cube//////////////////////////////////////////////////////////////////////////////		//
-				glActiveTexture(GL_TEXTURE0);
-				s_Data.Texture1->Bind();
-				glActiveTexture(GL_TEXTURE1);
-				s_Data.Texture2->Bind();
-				glActiveTexture(GL_TEXTURE2);
-				s_Data.Texture3->Bind();
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				//				//		
-				for (unsigned int i = 0; i < 10; i++)
-				{
-					model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-					float angle = 20.0f * i + 1;
-					model = glm::rotate(model, glm::radians(40.0f) , glm::vec3(1.0f, 0.3f, 0.5f));
-					s_Data.ShadowShader->SetMat4("model", model);
-					s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
-				}
-
-
 			}
+
+
+		}
 		//glDisable(GL_CULL_FACE);
 
 		s_Data.Shadow_FrameBuffer->Unbind();
@@ -634,15 +681,14 @@ namespace Opengl {
 		// -----------------------------------------------
 		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)1024 / (float)1024, near_plane, far_plane);
 		std::vector<glm::mat4> shadowTransforms;
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 		//Renderer_CubeShadowMap
 		s_Data.Shadow_FrameBuffer->BindDepthCubeRendererID();
-		//s_Data.Shadow_FrameBuffer->framebuffer_size();
 		s_Data.Point_ShadowMapShader->Bind();
 
 		for (unsigned int i = 0; i < 6; ++i)
@@ -651,34 +697,35 @@ namespace Opengl {
 		s_Data.Point_ShadowMapShader->SetFloat3("lightPos", lightPos);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
+		{
+			//plane地面//////////////////////////////////////////////////////////////////////////////////
+			glm::mat4 model = glm::mat4(1.0f);
+			//
+			model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
+			model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+			s_Data.Point_ShadowMapShader->SetMat4("model", model);
+			s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
+
+			// cube//////////////////////////////////////////////////////////////////////////////		//
+
+			//				//		
+			for (unsigned int i = 0; i < 10; i++)
 			{
-				//plane地面//////////////////////////////////////////////////////////////////////////////////
-				glm::mat4 model = glm::mat4(1.0f);
-				//
-				model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-				model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
+				model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+				float angle = 20.0f * i + 1;
+				model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 				s_Data.Point_ShadowMapShader->SetMat4("model", model);
 				s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
-
-				// cube//////////////////////////////////////////////////////////////////////////////		//
-
-				//				//		
-				for (unsigned int i = 0; i < 10; i++)
-				{
-					model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-					float angle = 20.0f * i + 1;
-					model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-					s_Data.Point_ShadowMapShader->SetMat4("model", model);
-					s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
-				}
 			}
+		}
 		s_Data.Shadow_FrameBuffer->Unbind();
+
 		///…… Draw ……
 
 		Renderer::DrawScene();
 
 		//Renderer_Scene
-		
+
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
@@ -687,9 +734,9 @@ namespace Opengl {
 		{
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.2f)); 
+			model = glm::scale(model, glm::vec3(0.2f));
 			s_Data.PointLightShader->SetMat4("model", model);
-			s_Data.PointLightShader->SetFloat3("color",s_Data.lightColors[i]);
+			s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[i]);
 			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
@@ -698,7 +745,7 @@ namespace Opengl {
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		s_Data.PointShader->Bind();
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 5.0f,10.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 5.0f, 10.0f));
 		s_Data.PointShader->SetMat4("model", model);
 		s_Data.PointShader->SetFloat3("color", result);
 		s_Data.m_DrawPoint->OnDraw(s_Data.PointShader);
@@ -707,7 +754,7 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 
-		s_Data.PlanetShader->Bind(); 
+		s_Data.PlanetShader->Bind();
 
 		//
 		s_Data.PlanetShader->SetFloat("shininess", 32.0f);
@@ -748,7 +795,7 @@ namespace Opengl {
 
 		//
 		model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 0.4f));
-		model = glm::translate(model, glm::vec3(20.0f, -10.0f, 0.0f)); 
+		model = glm::translate(model, glm::vec3(20.0f, -10.0f, 0.0f));
 		s_Data.PlanetShader->SetMat4("model", model);
 
 		s_Data.m_Model->Draw(s_Data.PlanetShader);
@@ -809,6 +856,19 @@ namespace Opengl {
 		//glActiveTexture(GL_TEXTURE0);
 		//glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
 		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
+		s_Data.Multisample_FrameBuffer->Unbind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		s_Data.HDRShader->Bind();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetColorAttachmentRendererID());
+		s_Data.HDRShader->SetInt("hdr", hdr);
+		s_Data.HDRShader->SetFloat("exposure", exposure);
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{
@@ -864,6 +924,7 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE3);
+		//glBindTexture(GL_TEXTURE_2D, 0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 
 		s_Data.Point_ShadowShader->Bind();
@@ -939,6 +1000,7 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		s_Data.Texture3->Bind();
 		glActiveTexture(GL_TEXTURE3);
+		//glBindTexture(GL_TEXTURE_2D, 0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 		//
 		s_Data.Point_ShadowShader->Bind();
@@ -947,7 +1009,7 @@ namespace Opengl {
 		{
 			model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
 			float angle = 20.0f * i + 1;
-			model = glm::rotate(model, glm::radians(40.0f) , glm::vec3(1.0f, 0.3f, 0.5f));
+			model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 			s_Data.Point_ShadowShader->SetMat4("model", model);
 
 			//Renderer::DrawIndexed(s_Data.CubeVertexArray);

@@ -57,6 +57,7 @@ namespace Opengl {
 
         uint32_t m_RendererID;//帧缓冲id---颜色附件
         uint32_t m_ColorAttachment;//附件id
+        uint32_t m_DepthAttachment;//附件id
 
         uint32_t m_DepthRendererID;//帧缓冲id---深度附件
         uint32_t m_DepthMapAttachment;//深度附件
