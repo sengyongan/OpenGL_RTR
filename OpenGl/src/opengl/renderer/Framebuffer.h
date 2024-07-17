@@ -3,23 +3,59 @@
 #include"hzpch.h"
 #include"opengl/core/App.h"
 namespace Opengl {
+    enum class FramebufferTextureFormat//帧缓冲纹理格式
+    {
+        None = 0,
 
-    struct FramebufferSpecification {
+        // Color//颜色
+        RGBA8,
+        RED_INTEGER,//红色整形
+
+        // Depth/stencil//深度/模板
+        DEPTH24STENCIL8,
+
+        // Defaults
+        Depth = DEPTH24STENCIL8//depth的默认值
+    };
+
+    struct FramebufferTextureSpecification//帧缓冲纹理规范
+    {
+        FramebufferTextureSpecification() = default;
+        FramebufferTextureSpecification(FramebufferTextureFormat format)//格式
+            : TextureFormat(format) {}
+
+        FramebufferTextureFormat TextureFormat = FramebufferTextureFormat::None;//纹理格式变量
+        // TODO: filtering/wrap
+    };
+
+    struct FramebufferAttachmentSpecification//帧缓冲器附件规范
+    {
+        FramebufferAttachmentSpecification() = default;
+        FramebufferAttachmentSpecification(std::initializer_list<FramebufferTextureSpecification> attachments)//纹理规范(接受列表）
+            : Attachments(attachments) {}
+
+        std::vector<FramebufferTextureSpecification> Attachments;//数组类型
+    };
+
+    struct FramebufferSpecification {//帧缓冲器规范
         uint32_t Width, Height;
-        uint32_t Samples = 1;
-
-        bool SwapChainTarget = false;
+        uint32_t Samples = 1;//多重采样
+        FramebufferAttachmentSpecification Attachments;//附件规范-
+        bool SwapChainTarget = false;//交换链目标
     };
 
     class Framebuffer {
     public:
         Framebuffer(const FramebufferSpecification& spec);
         ~Framebuffer();
+
         //init
-        void initMultisampleAttachment();//MSAA(抗锯齿）
-        void initColorAttachment();//
-        void iniDepthAttachment();//
-        void initDepthCubeAttachment();//
+        void initMultisampleAttachment();//MSAA(抗锯齿）多重采样
+        void initColorAttachment();//普通的颜色纹理附件，深度渲染对象附件
+        void iniDepthAttachment();//深度附件，平行光阴影
+        void initDepthCubeAttachment();//深度立方体附件，点阴影
+        void InvalidateMRT();//MRT
+        void Initpingpong();//pingpong
         //bind ID
         void BindMultisample();
         void BindRendererID();
@@ -33,6 +69,8 @@ namespace Opengl {
         //移动buffer
         void BlitFramebuffer();
 
+        void BindMRTFramebuffer();
+        void BindPingPongFramebuffer(const int index);
         //Get
         uint32_t GetMultisampleRendererID() const { return m_MultisampleRendererID; };//获取颜色缓冲附件
 
@@ -45,6 +83,11 @@ namespace Opengl {
         uint32_t GetDepthCubeRendererID() const { return m_DepthCubeRendererID; };//获取颜色缓冲
         uint32_t GetDepthCubeAttachmentRendererID() const { return m_DepthMapCubeAttachment; };//获取深度缓冲附件 
 
+        uint32_t GetMRTRendererID() const { return m_MRTRendererID; };//获取颜色缓冲
+        uint32_t GetMRTAttachmentRendererID(const int index) const { return colorBuffers[index]; };//获取颜色缓冲
+        //
+        uint32_t GetPingPongRendererID(const int index) const { return pingpongFBO[index]; };//获取颜色缓冲
+        uint32_t GetPingPongAttachmentRendererID(const int index) const { return pingpongColorbuffers[index]; };//获取颜色缓冲
         //
         const FramebufferSpecification& GetSpecification() const { return m_Specification; };
         //调整size
@@ -65,7 +108,22 @@ namespace Opengl {
         uint32_t m_DepthCubeRendererID;//帧缓冲id---深度立方体附件
         uint32_t m_DepthMapCubeAttachment;//深度附件
 
+        unsigned int pingpongFBO[2];
+        unsigned int pingpongColorbuffers[2];
 
         FramebufferSpecification m_Specification;//帧缓冲格式
+
+
+        //多渲染目标MRT
+        uint32_t m_MRTRendererID;//帧缓冲id---深度立方体附件
+        //纹理附件规范（格式）
+        std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;//帧缓冲器颜色附件规范数组（可以有多个）
+        FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;////帧缓冲器深度和模板附件规范////默认移动赋值操作符（将FramebufferTextureSpecification中的TextureFormat设置为format.TextureFormat
+        //附件id
+        //std::vector<uint32_t> m_MRTColorAttachments;//颜色附件（int为id值）
+        uint32_t m_MRTDepthAttachment = 0;
+
+        unsigned int colorBuffers[2];
+
     };
 }

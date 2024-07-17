@@ -43,7 +43,7 @@ namespace Opengl {
 	bool shadowsKeyPressed = false;
 	//HDR
 	GLboolean hdr = true; // Change with 'Space'
-	GLfloat exposure = 1.0f; // Change with Q and E
+	GLfloat exposure = 0.1f; // Change with Q and E
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(3.0f,  0.0f,  0.0f),
@@ -76,10 +76,10 @@ namespace Opengl {
 	vector<glm::vec3> windows
 	{
 		glm::vec3(-2.5f, -3.5f, -2.0f),
-			glm::vec3(-2.3f, -3.5f, 1.0f),
-			glm::vec3(-2.0f, -3.5f, 0.9f),
-			glm::vec3(-2.3f, -3.5f, -0.0f),
-			glm::vec3(-2.0f, -3.5f, -0.6f)
+		glm::vec3(-2.3f, -3.5f, 1.0f),
+		glm::vec3(-2.0f, -3.5f, 0.9f),
+		glm::vec3(-2.3f, -3.5f, -0.0f),
+		glm::vec3(-2.0f, -3.5f, -0.6f)
 	};
 	glm::vec3 lightPositions[] = {
 	   glm::vec3(-3.0f, -5.0f, 30.0f),
@@ -88,10 +88,17 @@ namespace Opengl {
 	   glm::vec3(3.0f,  -5.0f, 30.0f)
 	};
 	glm::vec3 lightColors[] = {
-		glm::vec3(0.25),
-		glm::vec3(0.50),
-		glm::vec3(0.75),
-		glm::vec3(1.00)
+		glm::vec3(5.0f,   5.0f,  5.0f),
+		glm::vec3(10.0f,  0.0f,  0.0f),
+		glm::vec3(0.0f,   0.0f,  15.0f),
+		glm::vec3(0.0f,   5.0f,  0.0f),
+		glm::vec3(5.0f,   5.0f,  5.0f),
+
+		glm::vec3(15.0f,  0.0f,  0.0f),
+		glm::vec3(0.0f,   0.0f,  10.0f),
+		glm::vec3(0.0f,   5.0f,  0.0f),
+		glm::vec3(0.0f,   0.0f,  20.0f),
+		glm::vec3(0.0f,   10.0f,  0.0f)
 	};
 	// Light sources
 	// - Positions
@@ -180,6 +187,11 @@ namespace Opengl {
 		//HDR///////////////////////////////////////////////////
 		std::shared_ptr<Shader> HDRShader;
 		std::shared_ptr<Shader> HDRCubeShader;
+		//MRT///////////// //////////////////////////////////////
+		std::shared_ptr<Shader> MRTShader;
+		//UniformBuffer////////////////////////////////////////////
+		std::shared_ptr<Shader> PingPongShader;
+
 		//modle///////////////////////////////////////////////////
 		std::shared_ptr<Shader> ModelShader;
 		std::shared_ptr<Model> m_Model;
@@ -226,10 +238,11 @@ namespace Opengl {
 		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/src/newShader/PointShadowMap.vs", "../OpenGl/src/newShader/PointShadowMap.fs", "../OpenGl/src/newShader/PointShadowMap.gs"));
 		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/src/shader/point_Shadow.vs", "../OpenGl/src/shader/point_Shadow.fs"));
 		s_Data.TBNQuadShader.reset(new Shader("../OpenGl/src/newShader/TBNquad.vs", "../OpenGl/src/newShader/TBNquad.fs"));
-
 		s_Data.HDRShader.reset(new Shader("../OpenGl/src/newShader/HDR.vs", "../OpenGl/src/newShader/HDR.fs"));
 		s_Data.HDRCubeShader.reset(new Shader("../OpenGl/src/newShader/HDRCube.vs", "../OpenGl/src/newShader/HDRCube.fs"));
+		s_Data.PingPongShader.reset(new Shader("../OpenGl/src/newShader/PingPong.vs", "../OpenGl/src/newShader/PingPong.fs"));
 
+		//s_Data.MRTShader.reset(new Shader("../OpenGl/src/newShader/MRT.vs", "../OpenGl/src/newShader/MRT.fs"));
 
 		//Texture
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
@@ -248,17 +261,26 @@ namespace Opengl {
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 		//
 		//Framebuffer
-		FramebufferSpecification fbSpec;
+
+		FramebufferSpecification fbSpec1;
+		fbSpec1.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec1);
+		s_Data.Multisample_FrameBuffer->InvalidateMRT();
+		s_Data.Multisample_FrameBuffer->Initpingpong();
+
 		//fbSpec.Width = 1600;
 		//fbSpec.Height = 900;
 		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.Multisample_FrameBuffer->Unbind();
 		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
 		//s_Data.FrameBuffer->Unbind();
-		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		s_Data.Multisample_FrameBuffer->initColorAttachment();
-		s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		s_Data.Shadow_FrameBuffer->initDepthCubeAttachment();
+
+		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec1);
+		//s_Data.Multisample_FrameBuffer->Invalidate();
+		
+		//s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
+		//s_Data.Shadow_FrameBuffer->initDepthCubeAttachment();
+		
 		//s_Data.Shadow_FrameBuffer->framebuffer_size();
 
 		//s_Data.Shadow_FrameBuffer->iniDepthAttachment();
@@ -329,9 +351,11 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.Point_ShadowShader->GetShaderProgram(), uniformBlockIndex_Point_ShadowShader, 0);
 		unsigned int uniformBlockIndex_TBNQuadShader = glGetUniformBlockIndex(s_Data.TBNQuadShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.TBNQuadShader->GetShaderProgram(), uniformBlockIndex_TBNQuadShader, 0);
-
 		unsigned int uniformBlockIndex_HDRCubeShader = glGetUniformBlockIndex(s_Data.HDRCubeShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.HDRCubeShader->GetShaderProgram(), uniformBlockIndex_HDRCubeShader, 0);
+
+		//unsigned int uniformBlockIndex_MRTShader = glGetUniformBlockIndex(s_Data.MRTShader->GetShaderProgram(), "Matrices");
+		//glUniformBlockBinding(s_Data.MRTShader->GetShaderProgram(), uniformBlockIndex_MRTShader, 0);
 		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
@@ -386,20 +410,27 @@ namespace Opengl {
 		s_Data.TBNQuadShader->SetInt("depthMap", 2);
 		//
 		s_Data.HDRShader->Bind();
-		s_Data.HDRShader->SetInt("hdrBuffer", 0);
+		s_Data.HDRShader->SetInt("scene", 0);
+		s_Data.HDRShader->SetInt("bloomBlur", 1);
+
 		s_Data.HDRCubeShader->Bind();
 		s_Data.HDRCubeShader->SetInt("diffuseTexture", 0);
+		//
+		s_Data.PingPongShader->Bind();
+		s_Data.PingPongShader->SetInt("image", 0);
+		//s_Data.MRTShader->Bind();
+		//s_Data.MRTShader->SetInt("diffuseTexture", 0);
 	}
 	void Renderer::EndScene()
 	{
 
-		s_Data.Multisample_FrameBuffer->initColorAttachment();
-
+		
 		//Multisample_FrameBuffer		
 		//s_Data.Multisample_FrameBuffer->framebuffer_size();
 
-		//s_Data.Multisample_FrameBuffer->Unbind(); 
-		//s_Data.Multisample_FrameBuffer->BindMultisample();
+		s_Data.Multisample_FrameBuffer->BindMRTFramebuffer();
+
+		// ping-pong-framebuffer for blurring
 
 
 		//input
@@ -416,18 +447,18 @@ namespace Opengl {
 		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
 		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
 		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
-		glActiveTexture(GL_TEXTURE0);
-		s_Data.metal_Texture->Bind();
-		s_Data.HDRCubeShader->Bind();
-		for (GLuint i = 0; i < HDR_LightPositions.size(); i++) {
-			s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Position", HDR_LightPositions[i]);
-			s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Color", HDR_lightColors[i]);
-		}
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 25.0));
-		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 55.0f));
-		s_Data.HDRCubeShader->SetMat4("model", model);
-		s_Data.HDRCubeShader->SetInt("inverse_normals", GL_TRUE);
-		s_Data.m_DrawCube->OnDraw(s_Data.HDRCubeShader);
+		//glActiveTexture(GL_TEXTURE0);
+		//s_Data.metal_Texture->Bind();
+		//s_Data.HDRCubeShader->Bind();
+		//for (GLuint i = 0; i < HDR_LightPositions.size(); i++) {
+		//	s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Position", HDR_LightPositions[i]);
+		//	s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Color", HDR_lightColors[i]);
+		//}
+		//model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 25.0));
+		//model = glm::scale(model, glm::vec3(5.0f, 5.0f, 55.0f));
+		//s_Data.HDRCubeShader->SetMat4("model", model);
+		//s_Data.HDRCubeShader->SetInt("inverse_normals", GL_TRUE);
+		//s_Data.m_DrawCube->OnDraw(s_Data.HDRCubeShader);
 
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
@@ -606,6 +637,7 @@ namespace Opengl {
 		s_Data.QuadShader->SetMat4("model", model);
 
 		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
+
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
 		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
@@ -674,20 +706,21 @@ namespace Opengl {
 
 		///бнбн Draw бнбн
 		Renderer::DrawScene();
-#endif
 
+#endif
 		//lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 		// 0. create depth cubemap transformation matrices
 		// -----------------------------------------------
 		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)1024 / (float)1024, near_plane, far_plane);
 		std::vector<glm::mat4> shadowTransforms;
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 		//Renderer_CubeShadowMap
+#if 0
 		s_Data.Shadow_FrameBuffer->BindDepthCubeRendererID();
 		s_Data.Point_ShadowMapShader->Bind();
 
@@ -722,10 +755,10 @@ namespace Opengl {
 
 		///бнбн Draw бнбн
 
+#endif
 		Renderer::DrawScene();
 
 		//Renderer_Scene
-
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
@@ -736,10 +769,11 @@ namespace Opengl {
 			model = glm::translate(model, pointLightPositions[i]);
 			model = glm::scale(model, glm::vec3(0.2f));
 			s_Data.PointLightShader->SetMat4("model", model);
-			s_Data.PointLightShader->SetFloat3("color", s_Data.lightColors[i]);
+			s_Data.PointLightShader->SetFloat3("color", lightColors[i]);
 			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
+
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
@@ -822,6 +856,7 @@ namespace Opengl {
 			s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
 		}
 		s_Data.QuadShader->Unbind();
+
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
 		//framebuffer///////////////////////////////////////////////////////////////////////////
@@ -856,18 +891,42 @@ namespace Opengl {
 		//glActiveTexture(GL_TEXTURE0);
 		//glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
 		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+
+		bool horizontal = true, first_iteration = true;
+		unsigned int amount = 10;
+		s_Data.PingPongShader->Bind();
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.Multisample_FrameBuffer->GetPingPongRendererID(horizontal));
+			s_Data.PingPongShader->SetInt("horizontal", horizontal);
+			glBindTexture(GL_TEXTURE_2D, first_iteration ? s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1) : s_Data.Multisample_FrameBuffer->GetPingPongAttachmentRendererID(!horizontal));  // bind texture of other framebuffer (or scene if first iteration)
+			s_Data.m_DrawScreenQuad->OnDraw(s_Data.PingPongShader);
+			horizontal = !horizontal;
+			if (first_iteration)
+				first_iteration = false;
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//frameBuffer//////////////////////////////////////////////////////////////////////////////
 		//frameBuffer//////////////////////////////////////////////////////////////////////////////
 		//frameBuffer//////////////////////////////////////////////////////////////////////////////
-		s_Data.Multisample_FrameBuffer->Unbind();
+		//s_Data.Multisample_FrameBuffer->Unbind();
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
 		s_Data.HDRShader->Bind();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetColorAttachmentRendererID());
-		s_Data.HDRShader->SetInt("hdr", hdr);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetPingPongAttachmentRendererID(!horizontal));
+
+		s_Data.HDRShader->SetInt("bloom", true);
 		s_Data.HDRShader->SetFloat("exposure", exposure);
-		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.HDRShader);
 
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
@@ -924,8 +983,8 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE3);
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
+		glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 
 		s_Data.Point_ShadowShader->Bind();
 
@@ -1000,8 +1059,8 @@ namespace Opengl {
 		glActiveTexture(GL_TEXTURE2);
 		s_Data.Texture3->Bind();
 		glActiveTexture(GL_TEXTURE3);
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
+		glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.Shadow_FrameBuffer->GetDepthCubeAttachmentRendererID());
 		//
 		s_Data.Point_ShadowShader->Bind();
 		//		//

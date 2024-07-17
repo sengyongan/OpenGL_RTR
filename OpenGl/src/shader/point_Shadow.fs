@@ -1,6 +1,8 @@
 #version 330 core
 
 layout(location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+
 //in
 in vec3 v_Position;
 in vec2 v_TexCoord;
@@ -153,7 +155,11 @@ void main()
     float shadow = constVal.shadows ? ShadowCalculation(v_Position,viewPos) : 0.0;     
     vec3 result = (result1 + (1.0 - shadow) * (result2 + result3));
     
-    
+    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0f)
+        BrightColor = vec4(result, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
     //FragColor = vec4(vec3(closestDepth / constVal.far_plane), 1.0);
     FragColor = vec4(result, 1.0) * vec4(0.8,0.9,1.0,1.0);//最终片段颜色 * 偏蓝色光
       

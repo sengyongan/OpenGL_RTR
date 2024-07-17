@@ -1,5 +1,6 @@
 #version 330 core
 layout(location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 //in
 in vec3 v_Position;
@@ -90,6 +91,7 @@ void main()
     vec3 I = normalize(v_Position - constVal.camera_Position);
     vec3 R = refract(I, norm, ratio);
     FragColor = vec4(texture(skybox, R).rgb, 1.0);
+    	 BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 
     //FragColor = vec4(result, 1.0);//×îÖÕÆ¬¶ÎÑÕÉ«
 }
