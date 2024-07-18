@@ -30,7 +30,6 @@ namespace Opengl {
 	//
 	bool gammaEnabled = false;
 	bool gammaKeyPressed = false;
-	//float near_plane = 1.0f, far_plane = 7.5f;
 	//ShadowMap
 	glm::mat4 lightProjection, lightView;//光空间矩阵
 	glm::mat4 lightSpaceMatrix;//视图投影矩阵
@@ -268,27 +267,7 @@ namespace Opengl {
 		s_Data.Multisample_FrameBuffer->InvalidateMRT();
 		s_Data.Multisample_FrameBuffer->Initpingpong();
 
-		//fbSpec.Width = 1600;
-		//fbSpec.Height = 900;
-		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		//s_Data.Multisample_FrameBuffer->Unbind();
-		//s_Data.FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		//s_Data.FrameBuffer->Unbind();
-
-		//s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec1);
-		//s_Data.Multisample_FrameBuffer->Invalidate();
-		
-		//s_Data.Shadow_FrameBuffer = std::make_unique<Framebuffer>(fbSpec);
-		//s_Data.Shadow_FrameBuffer->initDepthCubeAttachment();
-		
-		//s_Data.Shadow_FrameBuffer->framebuffer_size();
-
-		//s_Data.Shadow_FrameBuffer->iniDepthAttachment();
-		//s_Data.Shadow_FrameBuffer->Unbind();
-
-
-
-			//Model
+		//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
@@ -354,9 +333,6 @@ namespace Opengl {
 		unsigned int uniformBlockIndex_HDRCubeShader = glGetUniformBlockIndex(s_Data.HDRCubeShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.HDRCubeShader->GetShaderProgram(), uniformBlockIndex_HDRCubeShader, 0);
 
-		//unsigned int uniformBlockIndex_MRTShader = glGetUniformBlockIndex(s_Data.MRTShader->GetShaderProgram(), "Matrices");
-		//glUniformBlockBinding(s_Data.MRTShader->GetShaderProgram(), uniformBlockIndex_MRTShader, 0);
-		//uniformBuffer_GenBuffer
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
 
@@ -367,9 +343,6 @@ namespace Opengl {
 			GLfloat rColor = ((rand() % 100) / 100.0f); // Between 0.5 and 1.0
 			GLfloat gColor = ((rand() % 100) / 100.0f); // Between 0.5 and 1.0
 			GLfloat bColor = ((rand() % 100) / 100.0f);
-			//GLfloat rColor = ((rand() % 100) / 200.0f) + 0.8; // Between 0.5 and 1.0
-			//GLfloat gColor = ((rand() % 100) / 200.0f) + 0.8; // Between 0.5 and 1.0
-			//GLfloat bColor = ((rand() % 100) / 200.0f) + 0.8;
 			s_Data.lightColors.push_back(glm::vec3(rColor, gColor, bColor));
 		}
 
@@ -424,14 +397,7 @@ namespace Opengl {
 	void Renderer::EndScene()
 	{
 
-		
-		//Multisample_FrameBuffer		
-		//s_Data.Multisample_FrameBuffer->framebuffer_size();
-
 		s_Data.Multisample_FrameBuffer->BindMRTFramebuffer();
-
-		// ping-pong-framebuffer for blurring
-
 
 		//input
 		processInput(App::Get().GetWindow().GetNativeWindow());
@@ -443,22 +409,6 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
-
-		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
-		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
-		//HDR_CUBE///////////////////////////////////////////////////////////////////////////
-		//glActiveTexture(GL_TEXTURE0);
-		//s_Data.metal_Texture->Bind();
-		//s_Data.HDRCubeShader->Bind();
-		//for (GLuint i = 0; i < HDR_LightPositions.size(); i++) {
-		//	s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Position", HDR_LightPositions[i]);
-		//	s_Data.HDRCubeShader->SetFloat3("lights[" + std::to_string(i) + "].Color", HDR_lightColors[i]);
-		//}
-		//model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 25.0));
-		//model = glm::scale(model, glm::vec3(5.0f, 5.0f, 55.0f));
-		//s_Data.HDRCubeShader->SetMat4("model", model);
-		//s_Data.HDRCubeShader->SetInt("inverse_normals", GL_TRUE);
-		//s_Data.m_DrawCube->OnDraw(s_Data.HDRCubeShader);
 
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
@@ -494,21 +444,6 @@ namespace Opengl {
 		s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
 
 
-
-		//model = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
-		//model = glm::translate(model, lightPos);
-		//s_Data.TBNQuadShader->SetMat4("model", model);
-		//s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
-		//三角形///////////////////////////////////////////////////////////////////////////
-		//三角形///////////////////////////////////////////////////////////////////////////
-		//三角形///////////////////////////////////////////////////////////////////////////
-		//s_Data.TrianglesShader->Bind();
-		//model = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f));
-		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::translate(model, glm::vec3 (0.0f, 0.0f, -1.0f));
-		//s_Data.TrianglesShader->SetMat4("model", model);
-
-		//s_Data.m_DrawTriangles->OnDraw(s_Data.TrianglesShader);
 		//geometry///////////////////////////////////////////////////////////////////////////
 		//geometry///////////////////////////////////////////////////////////////////////////
 		//geometry///////////////////////////////////////////////////////////////////////////
@@ -638,124 +573,9 @@ namespace Opengl {
 
 		s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
 
-		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
-		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
-		// FrameBuffer_SHadowMapZ_frist//////////////////////////////////////////////////////////////////////////////
-#if 0
-		//ShadowMap
-		lightProjection = glm::ortho((float)-App::Get().GetWindow().GetNewWidth() / 100, (float)App::Get().GetWindow().GetNewWidth() / 100,
-			(float)-App::Get().GetWindow().GetNewHeight() / 100, (float)App::Get().GetWindow().GetNewHeight() / 100, near_plane, far_plane);
-		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-		lightSpaceMatrix = lightProjection * lightView;//T变换
-
-		///Shadow_Frambuffer_Draw ShadowMap
-		s_Data.Shadow_FrameBuffer->BindDepthRendererID();
-		s_Data.Shadow_FrameBuffer->framebuffer_size();
-
-		//面剔除
-		//glEnable(GL_CULL_FACE);
-
-		//glCullFace(GL_FRONT);//正面剔除
-		s_Data.ShadowShader->Bind();
-		s_Data.ShadowShader->SetMat4("lightSpaceMatrix", lightSpaceMatrix);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		{
-			//plane地面//////////////////////////////////////////////////////////////////////////////////
-			glm::mat4 model = glm::mat4(1.0f);
-
-			glActiveTexture(GL_TEXTURE0);
-			s_Data.metal_Texture->Bind();
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//
-			model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-			model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-			s_Data.ShadowShader->SetMat4("model", model);
-			s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
-
-			// cube//////////////////////////////////////////////////////////////////////////////		//
-			glActiveTexture(GL_TEXTURE0);
-			s_Data.Texture1->Bind();
-			glActiveTexture(GL_TEXTURE1);
-			s_Data.Texture2->Bind();
-			glActiveTexture(GL_TEXTURE2);
-			s_Data.Texture3->Bind();
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//				//		
-			for (unsigned int i = 0; i < 10; i++)
-			{
-				model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-				float angle = 20.0f * i + 1;
-				model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-				s_Data.ShadowShader->SetMat4("model", model);
-				s_Data.m_DrawCube->OnDraw(s_Data.ShadowShader);
-			}
-
-
-		}
-		//glDisable(GL_CULL_FACE);
-
-		s_Data.Shadow_FrameBuffer->Unbind();
-
-		///…… Draw ……
-		Renderer::DrawScene();
-
-#endif
 		//lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 		// 0. create depth cubemap transformation matrices
 		// -----------------------------------------------
-		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)1024 / (float)1024, near_plane, far_plane);
-		std::vector<glm::mat4> shadowTransforms;
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		shadowTransforms.push_back(shadowProj* glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-		//Renderer_CubeShadowMap
-#if 0
-		s_Data.Shadow_FrameBuffer->BindDepthCubeRendererID();
-		s_Data.Point_ShadowMapShader->Bind();
-
-		for (unsigned int i = 0; i < 6; ++i)
-			s_Data.Point_ShadowMapShader->SetMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
-		s_Data.Point_ShadowMapShader->SetFloat("far_plane", far_plane);
-		s_Data.Point_ShadowMapShader->SetFloat3("lightPos", lightPos);
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		{
-			//plane地面//////////////////////////////////////////////////////////////////////////////////
-			glm::mat4 model = glm::mat4(1.0f);
-			//
-			model = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-			model = glm::translate(model, glm::vec3(0.0f, -5.0f, -0.1f));
-			s_Data.Point_ShadowMapShader->SetMat4("model", model);
-			s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
-
-			// cube//////////////////////////////////////////////////////////////////////////////		//
-
-			//				//		
-			for (unsigned int i = 0; i < 10; i++)
-			{
-				model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-				float angle = 20.0f * i + 1;
-				model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-				s_Data.Point_ShadowMapShader->SetMat4("model", model);
-				s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowMapShader);
-			}
-		}
-		s_Data.Shadow_FrameBuffer->Unbind();
-
-		///…… Draw ……
-
-#endif
 		Renderer::DrawScene();
 
 		//Renderer_Scene
@@ -857,40 +677,6 @@ namespace Opengl {
 		}
 		s_Data.QuadShader->Unbind();
 
-		//framebuffer///////////////////////////////////////////////////////////////////////////
-		//framebuffer///////////////////////////////////////////////////////////////////////////
-		//framebuffer///////////////////////////////////////////////////////////////////////////
-
-		//s_Data.Multisample_FrameBuffer->BlitFramebuffer();
-		//s_Data.Multisample_FrameBuffer->Unbind();
-
-		//glDisable(GL_DEPTH_TEST);
-		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
-		//glClear(GL_COLOR_BUFFER_BIT);
-		////DrawQuad
-		//s_Data.SceneShader->Bind();
-		//s_Data.m_DrawScreenQuad->Bind();
-		//s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
-		//s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
-
-		//glActiveTexture(GL_TEXTURE0);
-		//s_Data.Multisample_FrameBuffer->BindTexture();
-
-		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
-
-		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
-		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
-		// FrameBuffer_SHadowMap_visual debugging//////////////////////////////////////////////////////////////////////////////
-		//s_Data.Shadow_FrameBuffer->Unbind();
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//s_Data.SceneShader->Bind();
-		//s_Data.SceneShader->SetInt("screenWidth_mid", App::Get().GetWindow().GetNewWidth());
-		//s_Data.SceneShader->SetInt("screenHeight_mid", App::Get().GetWindow().GetNewHeight());
-		//s_Data.SceneShader->SetFloat("near_plane", near_plane);
-		//s_Data.SceneShader->SetFloat("far_plane", far_plane);
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.Shadow_FrameBuffer->GetDepthAttachmentRendererID());
-		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
 		//pingpong//////////////////////////////////////////////////////////////////////////////
 		//pingpong//////////////////////////////////////////////////////////////////////////////
 		//pingpong//////////////////////////////////////////////////////////////////////////////
@@ -1102,78 +888,5 @@ namespace Opengl {
 			shadowsKeyPressed = false;
 		}
 	}
-	unsigned int cubeVAO = 0;
-	unsigned int cubeVBO = 0;
-	void Renderer::renderCube()
-	{
-		// initialize (if necessary)
-		if (cubeVAO == 0)
-		{
-			float vertices[] = {
-				// back face
-				-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-				 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-				 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-				 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-				-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-				-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-				// front face
-				-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-				 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-				 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-				 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-				-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-				-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-				// left face
-				-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-				-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-				-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-				-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-				-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-				-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-				// right face
-				 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-				 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-				 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-				 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-				 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-				 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-				 // bottom face
-				 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-				  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-				  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-				  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-				 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-				 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-				 // top face
-				 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-				  1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-				  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-				  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-				 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-				 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
-			};
-			glGenVertexArrays(1, &cubeVAO);
-			glGenBuffers(1, &cubeVBO);
-			// fill buffer
-			glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-			// link vertex attributes
-			glBindVertexArray(cubeVAO);
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-			glEnableVertexAttribArray(2);
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-		// render Cube
-		glBindVertexArray(cubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-	}
-
 
 }

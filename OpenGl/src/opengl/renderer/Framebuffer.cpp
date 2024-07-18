@@ -10,7 +10,7 @@ namespace Opengl {
             return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;//如果是多重采样，就为多重，否则返回普通
         }
         //创建纹理
-        static void CreateTextures(uint32_t* outID, uint32_t count)//outID纹理标识符，传入数组的指针，count传入数组大小
+        static void CreateTextures(uint32_t count, uint32_t* outID)//outID纹理标识符，传入数组的指针，count传入数组大小
         {   //glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
             glGenTextures( count, outID);
         }
@@ -34,8 +34,7 @@ namespace Opengl {
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             }
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);////将纹理对象附加到帧缓冲对象的 颜色附件点
@@ -43,23 +42,8 @@ namespace Opengl {
         //深度缓冲附件纹理
         static void AttachDepthTexture(uint32_t id, int samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
         {
-            bool multisampled = samples > 1;
-            if (multisampled)
-            {
-                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
-            }
-            else
-            {
-                glTexImage2D(GL_TEXTURE_2D, 1, format, width, height, 0, format, GL_FLOAT, nullptr);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            }
-
-            glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, id);
         }
         //是否是深度格式
         static bool IsDepthFormat(FramebufferTextureFormat format)
@@ -87,7 +71,7 @@ namespace Opengl {
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
         : m_Specification(spec)
     {
-        for (auto spec : m_Specification.Attachments.Attachments) {//FramebufferTextureSpecification.Attachments数组
+        for (auto spec : m_Specification.Attachments.Attachments) {//纹理附件规范数组
             if (!Utils::IsDepthFormat(spec.TextureFormat))//不是深度缓冲
                 m_ColorAttachmentSpecifications.emplace_back(spec);//添加到颜色缓冲格式数组
             else
@@ -104,49 +88,51 @@ namespace Opengl {
         glBindFramebuffer(GL_FRAMEBUFFER, m_MRTRendererID);
                 // ---------------------------------------
         //unsigned int hdrFBO;
-
-        ////Attachments附件/////////////////////////////////////////////////////////////////////////////////////////////
-        //bool multisample = m_Specification.Samples > 1;//多重采样Samples，如果>1，代表多重采样，返回GL_TEXTURE_2D_MULTISAMPLE
+        bool multisample = m_Specification.Samples > 1;
+        Utils::CreateTextures(sizeof(colorBuffers), colorBuffers);
         ////颜色格式存在
         if (m_ColorAttachmentSpecifications.size())
         {
-                glGenTextures(2, colorBuffers);
-                for (unsigned int i = 0; i < 2; i++)
+            
+            for (unsigned int i = 0; i < m_ColorAttachmentSpecifications.size(); i++)
+            {
+                Utils::BindTexture(multisample, colorBuffers[i]);
+                switch (m_ColorAttachmentSpecifications[i].TextureFormat)//检查每个颜色各式
                 {
-                    glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    // attach texture to framebuffer
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+                case FramebufferTextureFormat::RGBA8:
+                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_RGBA16F, GL_RGBA,
+                        1024, 1024, i);
+                    break;
+                case FramebufferTextureFormat::RED_INTEGER:
+                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER,
+                        1024, 1024, i);
+                    break;
                 }
-
-
+            }
         }
         //深度格式存在
         if (m_DepthAttachmentSpecification.TextureFormat != FramebufferTextureFormat::None)
         {
-            unsigned int rboDepth;
-            glGenRenderbuffers(1, &rboDepth);
-            glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+            glGenRenderbuffers(1, &m_MRTDepthAttachment);
+            glBindRenderbuffer(GL_RENDERBUFFER, m_MRTDepthAttachment);
 
+            switch (m_DepthAttachmentSpecification.TextureFormat)
+            {
+                case FramebufferTextureFormat::DEPTH24STENCIL8:
+                    Utils::AttachDepthTexture(m_MRTDepthAttachment, m_Specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, 1024,1024);
+                    break;
+            }
         }
         //渲染到多个颜色缓冲
-        //if (colorBuffers > 1)
-        //{
+        if (m_ColorAttachmentSpecifications.size() > 1)
+        {
             unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
             glDrawBuffers(2, attachments);
-
-        //}
-        //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        //    std::cout << "Framebuffer not complete!" << std::endl;
+        }
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "Framebuffer not complete!" << std::endl;
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0);//解除对帧缓冲对象的绑定
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     }
     void Framebuffer::Initpingpong()

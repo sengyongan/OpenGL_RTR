@@ -93,7 +93,6 @@ namespace Opengl {
         //调整size
         void framebuffer_size();
 
-
     public:
         uint32_t m_MultisampleRendererID;//帧缓冲id---多重渲染
         uint32_t m_MultisampleColorAttachment;//附件id
@@ -120,10 +119,9 @@ namespace Opengl {
         std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;//帧缓冲器颜色附件规范数组（可以有多个）
         FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;////帧缓冲器深度和模板附件规范////默认移动赋值操作符（将FramebufferTextureSpecification中的TextureFormat设置为format.TextureFormat
         //附件id
-        //std::vector<uint32_t> m_MRTColorAttachments;//颜色附件（int为id值）
+        unsigned int colorBuffers[2];
         uint32_t m_MRTDepthAttachment = 0;
 
-        unsigned int colorBuffers[2];
 
     };
 }
