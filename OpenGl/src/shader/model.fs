@@ -87,7 +87,9 @@ void main()
     // Transform normal vector to range [-1,1]
     normal = normalize(normal * 2.0 - 1.0); 
     vec3 norm = normalize(TBN * normal);//片段modle后的法线
-    //
+
+
+    ///////////////////////////////////////////////////////////////////////////////
     vec3 result = CalcDirLight(dirLight, norm, viewPos);
 
     for(int i = 0; i < 10; i++)

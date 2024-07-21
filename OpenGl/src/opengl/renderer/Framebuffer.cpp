@@ -32,10 +32,8 @@ namespace Opengl {
             {
                 glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_FLOAT, nullptr);//为纹理分配Data
 
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             }
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);////将纹理对象附加到帧缓冲对象的 颜色附件点
         }
@@ -60,8 +58,8 @@ namespace Opengl {
         {
             switch (format)
             {
-            case FramebufferTextureFormat::RGBA8:       return GL_RGBA8;
-            case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+            case FramebufferTextureFormat::RGBA16F: return GL_RGBA16F;
+            case FramebufferTextureFormat::RGBA: return GL_RGBA;
             }
 
             return 0;
@@ -99,13 +97,11 @@ namespace Opengl {
                 Utils::BindTexture(multisample, colorBuffers[i]);
                 switch (m_ColorAttachmentSpecifications[i].TextureFormat)//检查每个颜色各式
                 {
-                case FramebufferTextureFormat::RGBA8:
-                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_RGBA16F, GL_RGBA,
-                        1024, 1024, i);
+                case FramebufferTextureFormat::RGBA16F:
+                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_RGBA16F, GL_RGBA, 1024, 1024, i);
                     break;
-                case FramebufferTextureFormat::RED_INTEGER:
-                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER,
-                        1024, 1024, i);
+                case FramebufferTextureFormat::RGBA:
+                    Utils::AttachColorTexture(colorBuffers[i], m_Specification.Samples, GL_RGBA, GL_RGBA, 1024, 1024, i);
                     break;
                 }
             }
@@ -126,9 +122,10 @@ namespace Opengl {
         //渲染到多个颜色缓冲
         if (m_ColorAttachmentSpecifications.size() > 1)
         {
-            unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-            glDrawBuffers(2, attachments);
+            unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2 };
+            glDrawBuffers(3, attachments);
         }
+
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "Framebuffer not complete!" << std::endl;
         /////////////////////////////////////////////////////////////////////////////////////////////////////////

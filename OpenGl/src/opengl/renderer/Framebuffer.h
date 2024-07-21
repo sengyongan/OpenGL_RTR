@@ -8,8 +8,8 @@ namespace Opengl {
         None = 0,
 
         // Color//颜色
-        RGBA8,
-        RED_INTEGER,//红色整形
+        RGBA16F,
+        RGBA,//红色整形
 
         // Depth/stencil//深度/模板
         DEPTH24STENCIL8,
@@ -119,7 +119,7 @@ namespace Opengl {
         std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;//帧缓冲器颜色附件规范数组（可以有多个）
         FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;////帧缓冲器深度和模板附件规范////默认移动赋值操作符（将FramebufferTextureSpecification中的TextureFormat设置为format.TextureFormat
         //附件id
-        unsigned int colorBuffers[2];
+        unsigned int colorBuffers[10];
         uint32_t m_MRTDepthAttachment = 0;
 
 

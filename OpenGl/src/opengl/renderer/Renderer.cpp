@@ -74,11 +74,11 @@ namespace Opengl {
 	};
 	vector<glm::vec3> windows
 	{
-		glm::vec3(-2.5f, -3.5f, -2.0f),
-		glm::vec3(-2.3f, -3.5f, 1.0f),
-		glm::vec3(-2.0f, -3.5f, 0.9f),
-		glm::vec3(-2.3f, -3.5f, -0.0f),
-		glm::vec3(-2.0f, -3.5f, -0.6f)
+		glm::vec3(-7.5f, -3.5f, -2.0f),
+			glm::vec3(-7.3f, -3.5f, 1.0f),
+			glm::vec3(-7.0f, -3.5f, 0.9f),
+			glm::vec3(-7.3f, -3.5f, -0.0f),
+			glm::vec3(-7.0f, -3.5f, -0.6f)
 	};
 	glm::vec3 lightPositions[] = {
 	   glm::vec3(-3.0f, -5.0f, 30.0f),
@@ -103,17 +103,33 @@ namespace Opengl {
 	// - Positions
 	vector<glm::vec3> HDR_LightPositions {
 		glm::vec3(0.0f, 0.0f, 49.5f),
-		glm::vec3(-1.4f, -1.9f, 9.0f),
-		glm::vec3(0.0f, -1.8f, 4.0f),
-		glm::vec3(0.8f, -1.7f, 6.0f)
+			glm::vec3(-1.4f, -1.9f, 9.0f),
+			glm::vec3(0.0f, -1.8f, 4.0f),
+			glm::vec3(0.8f, -1.7f, 6.0f)
 	};
 	// - Colors
 	vector<glm::vec3> HDR_lightColors{
 		glm::vec3(200.0f, 200.0f, 200.0f),
-		glm::vec3(0.1f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 0.2f),
-		glm::vec3(0.0f, 0.1f, 0.0f)
+			glm::vec3(0.1f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 0.2f),
+			glm::vec3(0.0f, 0.1f, 0.0f)
 	};
+	vector<glm::vec3> objectPositions{
+		glm::vec3(-10.0, -15.0, -10.0),
+		glm::vec3(-10.0, -15.0, 0.0),
+		glm::vec3(-10.0, -15.0, 10.0),
+						  
+		glm::vec3(0.0,   -15.0, -10.0),
+		glm::vec3(0.0,   -15.0, 0.0),
+		glm::vec3(0.0,   -15.0, 10.0),
+						  
+		glm::vec3(10.0,  -15.0, 0.0),
+		glm::vec3(10.0,  -15.0, -10.0),
+		glm::vec3(10.0,  -15.0, 10.)
+	};
+		
+	std::vector<glm::vec3> Temp_LightPositions;
+	std::vector<glm::vec3> Temp_LightColors;
 	//RendererData
 	struct RendererData {
 		//Draw/////////////////////////////////////////////////////
@@ -202,6 +218,10 @@ namespace Opengl {
 		std::shared_ptr<Texture> brickWall_Texture;
 		std::shared_ptr<Texture> brickWall_Normal_Texture;
 		std::shared_ptr<Texture> brickWall_Depth_Texture;
+		//G_Buffer && deferred_Light///////////////////////////////////////////////////
+		std::shared_ptr<Shader> G_BufferShader;
+		std::shared_ptr<Shader> deferred_lightShader;
+		std::shared_ptr<Model> m_BackModel;
 
 	};
 	static RendererData s_Data;
@@ -241,6 +261,8 @@ namespace Opengl {
 		s_Data.HDRCubeShader.reset(new Shader("../OpenGl/src/newShader/HDRCube.vs", "../OpenGl/src/newShader/HDRCube.fs"));
 		s_Data.PingPongShader.reset(new Shader("../OpenGl/src/newShader/PingPong.vs", "../OpenGl/src/newShader/PingPong.fs"));
 
+		s_Data.G_BufferShader.reset(new Shader("../OpenGl/src/newShader/g_ModelShader.vs", "../OpenGl/src/newShader/g_ModelShader.fs"));
+		s_Data.deferred_lightShader.reset(new Shader("../OpenGl/src/newShader/deferred.vs", "../OpenGl/src/newShader/deferred.fs"));
 		//s_Data.MRTShader.reset(new Shader("../OpenGl/src/newShader/MRT.vs", "../OpenGl/src/newShader/MRT.fs"));
 
 		//Texture
@@ -262,10 +284,9 @@ namespace Opengl {
 		//Framebuffer
 
 		FramebufferSpecification fbSpec1;
-		fbSpec1.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		fbSpec1.Attachments = { FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RGBA16F,FramebufferTextureFormat::RGBA, FramebufferTextureFormat::Depth };
 		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec1);
 		s_Data.Multisample_FrameBuffer->InvalidateMRT();
-		s_Data.Multisample_FrameBuffer->Initpingpong();
 
 		//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
@@ -332,6 +353,8 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.TBNQuadShader->GetShaderProgram(), uniformBlockIndex_TBNQuadShader, 0);
 		unsigned int uniformBlockIndex_HDRCubeShader = glGetUniformBlockIndex(s_Data.HDRCubeShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.HDRCubeShader->GetShaderProgram(), uniformBlockIndex_HDRCubeShader, 0);
+		unsigned int uniformBlockIndex_G_BufferShader = glGetUniformBlockIndex(s_Data.G_BufferShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.G_BufferShader->GetShaderProgram(), uniformBlockIndex_G_BufferShader, 0);
 
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
@@ -345,7 +368,24 @@ namespace Opengl {
 			GLfloat bColor = ((rand() % 100) / 100.0f);
 			s_Data.lightColors.push_back(glm::vec3(rColor, gColor, bColor));
 		}
+		// lighting info
+		// -------------
+		const unsigned int NR_LIGHTS = 32;
 
+		srand(13);
+		for (unsigned int i = 0; i < NR_LIGHTS; i++)
+		{
+			// calculate slightly random offsets
+			float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+			float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
+			float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
+			Temp_LightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+			// also calculate random color
+			float rColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+			float gColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+			float bColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
+			Temp_LightColors.push_back(glm::vec3(rColor, gColor, bColor));
+		}
 		//texture->setInt///////////////////////////////////////////////////////////////////
 		s_Data.CubeShader->Bind();
 		s_Data.CubeShader->SetInt("material.texture1", 0);
@@ -393,11 +433,13 @@ namespace Opengl {
 		s_Data.PingPongShader->SetInt("image", 0);
 		//s_Data.MRTShader->Bind();
 		//s_Data.MRTShader->SetInt("diffuseTexture", 0);
+		s_Data.deferred_lightShader->Bind();
+		s_Data.deferred_lightShader->SetInt("gPosition", 0);
+		s_Data.deferred_lightShader->SetInt("gNormal", 1);
+		s_Data.deferred_lightShader->SetInt("gAlbedoSpec", 2);
 	}
 	void Renderer::EndScene()
 	{
-
-		s_Data.Multisample_FrameBuffer->BindMRTFramebuffer();
 
 		//input
 		processInput(App::Get().GetWindow().GetNativeWindow());
@@ -409,6 +451,86 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
+
+
+		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
+		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
+		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
+
+		s_Data.Multisample_FrameBuffer->BindMRTFramebuffer();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		s_Data.G_BufferShader->Bind();
+		for (unsigned int i = 0; i < objectPositions.size(); i++)
+		{
+			model = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
+			model = glm::translate(model, objectPositions[i]);
+			s_Data.G_BufferShader->SetMat4("model", model);
+			s_Data.G_BufferShader->SetFloat3("camera_Position", App::Get().GetCamera().GetPosition());
+			s_Data.m_Model->Draw(s_Data.G_BufferShader);
+		}
+		//s_Data.Multisample_FrameBuffer->Unbind();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		s_Data.deferred_lightShader->Bind();
+
+
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1));
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(2));
+
+		//
+		s_Data.deferred_lightShader->SetFloat("shininess", 32.0f);
+		//
+		s_Data.deferred_lightShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
+		s_Data.deferred_lightShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
+		s_Data.deferred_lightShader->SetFloat("constVal.constant", 1.0f);
+		s_Data.deferred_lightShader->SetFloat("constVal.linear", 0.09f);
+		s_Data.deferred_lightShader->SetFloat("constVal.quadratic", 0.032f);
+		//
+
+		// directional light
+		s_Data.deferred_lightShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		s_Data.deferred_lightShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		s_Data.deferred_lightShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		s_Data.deferred_lightShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		// point light 1
+		for (int i = 0; i < 10; i++) {
+			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
+			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
+
+			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
+
+		// spotLight
+
+		s_Data.deferred_lightShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		s_Data.deferred_lightShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		s_Data.deferred_lightShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		s_Data.deferred_lightShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		s_Data.deferred_lightShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.deferred_lightShader);
+
+
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, s_Data.Multisample_FrameBuffer->GetMRTRendererID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBlitFramebuffer(0, 0, 1024, 1024, 0, 0, 1024, 1024, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
 
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
@@ -658,6 +780,7 @@ namespace Opengl {
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
+		glEnable(GL_BLEND);
 		glActiveTexture(GL_TEXTURE0);
 		s_Data.window_Texture->Bind();
 		s_Data.QuadShader->Bind();
@@ -676,43 +799,30 @@ namespace Opengl {
 			s_Data.m_DrawQuad->OnDraw(s_Data.QuadShader);
 		}
 		s_Data.QuadShader->Unbind();
+		glDisable(GL_BLEND);
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		//pingpong//////////////////////////////////////////////////////////////////////////////
+		//
 
-		//pingpong//////////////////////////////////////////////////////////////////////////////
-		//pingpong//////////////////////////////////////////////////////////////////////////////
-		//pingpong//////////////////////////////////////////////////////////////////////////////
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
-
-		bool horizontal = true, first_iteration = true;
-		unsigned int amount = 10;
-		s_Data.PingPongShader->Bind();
-		for (unsigned int i = 0; i < amount; i++)
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, s_Data.Multisample_FrameBuffer->GetPingPongRendererID(horizontal));
-			s_Data.PingPongShader->SetInt("horizontal", horizontal);
-			glBindTexture(GL_TEXTURE_2D, first_iteration ? s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1) : s_Data.Multisample_FrameBuffer->GetPingPongAttachmentRendererID(!horizontal));  // bind texture of other framebuffer (or scene if first iteration)
-			s_Data.m_DrawScreenQuad->OnDraw(s_Data.PingPongShader);
-			horizontal = !horizontal;
-			if (first_iteration)
-				first_iteration = false;
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//frameBuffer//////////////////////////////////////////////////////////////////////////////
-		//frameBuffer//////////////////////////////////////////////////////////////////////////////
-		//frameBuffer//////////////////////////////////////////////////////////////////////////////
-		//s_Data.Multisample_FrameBuffer->Unbind();
+		//bool horizontal = true, first_iteration = true;
+		//unsigned int amount = 10;
+		//s_Data.PingPongShader->Bind();
+		//for (unsigned int i = 0; i < amount; i++)
+		//{
+		//	glBindFramebuffer(GL_FRAMEBUFFER, s_Data.Multisample_FrameBuffer->GetPingPongRendererID(horizontal));
+		//	s_Data.PingPongShader->SetInt("horizontal", horizontal);
+		//	glBindTexture(GL_TEXTURE_2D, first_iteration ? s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1) : s_Data.Multisample_FrameBuffer->GetPingPongAttachmentRendererID(!horizontal));  // bind texture of other framebuffer (or scene if first iteration)
+		//	s_Data.m_DrawScreenQuad->OnDraw(s_Data.PingPongShader);
+		//	horizontal = !horizontal;
+		//	if (first_iteration)
+		//		first_iteration = false;
+		//}
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
+		//frameBuffer//////////////////////////////////////////////////////////////////////////////
 
-		s_Data.HDRShader->Bind();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetPingPongAttachmentRendererID(!horizontal));
-
-		s_Data.HDRShader->SetInt("bloom", true);
-		s_Data.HDRShader->SetFloat("exposure", exposure);
-		s_Data.m_DrawScreenQuad->OnDraw(s_Data.HDRShader);
 
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
@@ -729,12 +839,12 @@ namespace Opengl {
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);
 		//混合
-		glEnable(GL_BLEND);
+		//glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//点渲染模式，调整大小
 		glEnable(GL_PROGRAM_POINT_SIZE);
 		//清除颜色缓冲
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	}
