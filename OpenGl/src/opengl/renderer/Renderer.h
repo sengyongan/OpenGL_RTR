@@ -24,8 +24,8 @@ namespace Opengl {
 		static void renderCube();
 
 		static void processInput(GLFWwindow* window);
-		//temp
 
+		static void SSAOKernel();
 
 	};
 }

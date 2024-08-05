@@ -25,6 +25,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <random>
+
 namespace Opengl {
 	bool blinn = true;
 	//
@@ -43,6 +45,14 @@ namespace Opengl {
 	//HDR
 	GLboolean hdr = true; // Change with 'Space'
 	GLfloat exposure = 0.1f; // Change with Q and E
+
+	float ourLerp(float a, float b, float f)
+	{
+		return a + f * (b - a);
+	}
+
+	unsigned int noiseTexture;
+
 	//multiple * 10 positions
 	glm::vec3 cubePositions[] = {
 		glm::vec3(3.0f,  0.0f,  0.0f),
@@ -222,7 +232,14 @@ namespace Opengl {
 		std::shared_ptr<Shader> G_BufferShader;
 		std::shared_ptr<Shader> deferred_lightShader;
 		std::shared_ptr<Model> m_BackModel;
-
+		//SSAO///////////////////////////////////////////////////
+		std::shared_ptr<Shader> G_BufferSSAOShader;
+		std::shared_ptr<Shader> G_BufferCubeSSAOShader;
+		std::shared_ptr<Shader> SAOShader;
+		std::shared_ptr<Shader> SAOBlurShader;
+		std::shared_ptr<Shader> SSAOLightShader;
+		std::vector<glm::vec3> ssaoKernel;
+		std::vector<glm::vec3> ssaoNoise;
 	};
 	static RendererData s_Data;
 
@@ -264,6 +281,13 @@ namespace Opengl {
 		s_Data.G_BufferShader.reset(new Shader("../OpenGl/src/newShader/g_ModelShader.vs", "../OpenGl/src/newShader/g_ModelShader.fs"));
 		s_Data.deferred_lightShader.reset(new Shader("../OpenGl/src/newShader/deferred.vs", "../OpenGl/src/newShader/deferred.fs"));
 		//s_Data.MRTShader.reset(new Shader("../OpenGl/src/newShader/MRT.vs", "../OpenGl/src/newShader/MRT.fs"));
+		s_Data.G_BufferSSAOShader.reset(new Shader("../OpenGl/src/SSAO/G_Buffer.vs", "../OpenGl/src/SSAO/G_Buffer.fs"));
+		s_Data.G_BufferCubeSSAOShader.reset(new Shader("../OpenGl/src/SSAO/G_CubeBuffer.vs", "../OpenGl/src/SSAO/G_Buffer.fs"));
+		s_Data.SAOShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/ssao.fs"));
+		s_Data.SAOBlurShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/blur.fs"));
+		s_Data.SSAOLightShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/light.fs"));
+
+		Renderer::SSAOKernel();
 
 		//Texture
 		s_Data.Texture1 = std::make_unique<Texture>("../OpenGl/resources/textures/container2.png");
@@ -287,6 +311,7 @@ namespace Opengl {
 		fbSpec1.Attachments = { FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RGBA16F,FramebufferTextureFormat::RGBA, FramebufferTextureFormat::Depth };
 		s_Data.Multisample_FrameBuffer = std::make_unique<Framebuffer>(fbSpec1);
 		s_Data.Multisample_FrameBuffer->InvalidateMRT();
+		s_Data.Multisample_FrameBuffer->InitSSAO();
 
 		//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
@@ -437,6 +462,22 @@ namespace Opengl {
 		s_Data.deferred_lightShader->SetInt("gPosition", 0);
 		s_Data.deferred_lightShader->SetInt("gNormal", 1);
 		s_Data.deferred_lightShader->SetInt("gAlbedoSpec", 2);
+
+		//SSAO
+		s_Data.SSAOLightShader->Bind();
+		s_Data.SSAOLightShader->SetInt("gPosition", 0);
+		s_Data.SSAOLightShader->SetInt("gNormal", 1);
+		s_Data.SSAOLightShader->SetInt("gAlbedo", 2);
+		s_Data.SSAOLightShader->SetInt("ssao", 3);
+
+		s_Data.SAOShader->Bind();
+		s_Data.SAOShader->SetInt("gPosition", 0);
+		s_Data.SAOShader->SetInt("gNormal", 1);
+		s_Data.SAOShader->SetInt("texNoise", 2);
+
+		s_Data.SAOBlurShader->Bind();
+		s_Data.SAOBlurShader->SetInt("ssaoInput", 0);
+
 	}
 	void Renderer::EndScene()
 	{
@@ -459,24 +500,101 @@ namespace Opengl {
 
 		s_Data.Multisample_FrameBuffer->BindMRTFramebuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		s_Data.G_BufferShader->Bind();
-		for (unsigned int i = 0; i < objectPositions.size(); i++)
-		{
-			model = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
-			model = glm::translate(model, objectPositions[i]);
-			s_Data.G_BufferShader->SetMat4("model", model);
-			s_Data.G_BufferShader->SetFloat3("camera_Position", App::Get().GetCamera().GetPosition());
-			s_Data.m_Model->Draw(s_Data.G_BufferShader);
+		glm::mat4 projection = App::Get().GetCamera().GetProjection();
+		glm::mat4 view = App::Get().GetCamera().GetViewMatrix();
+
+		s_Data.G_BufferSSAOShader->Bind();
+		s_Data.G_BufferSSAOShader->SetMat4("projection", projection);
+		s_Data.G_BufferSSAOShader->SetMat4("view", view);
+		model = glm::scale(model, glm::vec3(0.3f));
+		model = glm::rotate(model, glm::radians(-90.0f),glm::vec3(0.0, 1.0, 0.0)) 
+			* glm::rotate(glm::mat4(1.0f),
+			glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+		model = glm::translate(model, glm::vec3(0.0f, -10.0f, -12.0));
+		s_Data.G_BufferSSAOShader->SetMat4("model", model);
+		s_Data.G_BufferSSAOShader->SetInt("invertedNormals", 0);
+		s_Data.m_Model->Draw(s_Data.G_BufferSSAOShader);
+
+
+		s_Data.G_BufferCubeSSAOShader->Bind();
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f,0.1f,3.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -40.0f, 0.0));
+		s_Data.G_BufferCubeSSAOShader->SetMat4("projection", projection);
+		s_Data.G_BufferCubeSSAOShader->SetMat4("view", view);
+		s_Data.G_BufferCubeSSAOShader->SetMat4("model", model);
+		s_Data.G_BufferSSAOShader->SetInt("invertedNormals", 0);
+		s_Data.m_DrawCube->OnDraw(s_Data.G_BufferCubeSSAOShader);
+
+
+		s_Data.Multisample_FrameBuffer->Unbind();
+
+		//for (unsigned int i = 0; i < objectPositions.size(); i++)
+		//{
+		//	model = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
+		//	model = glm::translate(model, objectPositions[i]);
+		//	s_Data.G_BufferShader->SetMat4("model", model);
+		//	s_Data.G_BufferShader->SetFloat3("camera_Position", App::Get().GetCamera().GetPosition());
+		//	s_Data.m_Model->Draw(s_Data.G_BufferShader);
+		//}
+		//SSAO///////////////////////////////////////////////////////////////////////////
+		//SSAO///////////////////////////////////////////////////////////////////////////
+		//SSAO///////////////////////////////////////////////////////////////////////////
+		s_Data.Multisample_FrameBuffer->BindSSAOFramebuffer();
+		glClear(GL_COLOR_BUFFER_BIT);
+		s_Data.SAOShader->Bind();
+		
+		for (unsigned int i = 0; i < 64; ++i) {
+		
+			s_Data.SAOShader->SetFloat3("samples[" + std::to_string(i) + "]", s_Data.ssaoKernel[i]);
 		}
+		s_Data.SAOShader->SetMat4("projection", projection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1));
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, noiseTexture);
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SAOShader);
+
+		s_Data.Multisample_FrameBuffer->Unbind();
+		//Blur///////////////////////////////////////////////////////////////////////////
+		//Blur///////////////////////////////////////////////////////////////////////////
+		//Blur///////////////////////////////////////////////////////////////////////////
+		s_Data.Multisample_FrameBuffer->BindSSAOBlurFramebuffer();
+		glClear(GL_COLOR_BUFFER_BIT);
+		s_Data.SAOBlurShader->Bind();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetSSAOColorBufferAttachmentID());
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SAOBlurShader);
+
+		s_Data.Multisample_FrameBuffer->Unbind();
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+		//deferred_Light///////////////////////////////////////////////////////////////////////////
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		s_Data.SSAOLightShader->Bind();
+		glm::vec3 lightPosView = glm::vec3(view * glm::vec4(2.0, 4.0, -2.0, 1.0));
+		s_Data.SSAOLightShader->SetFloat3("light.Position", lightPosView);
+		s_Data.SSAOLightShader->SetFloat3("light.Color", glm::vec3(0.7f,0.7f,1.0f));
+		// Update attenuation parameters
+		const float linear = 0.09f;
+		const float quadratic = 0.032f;
+		s_Data.SSAOLightShader->SetFloat("light.Linear", linear);
+		s_Data.SSAOLightShader->SetFloat("light.Quadratic", quadratic);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1));
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(2));
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetSSAOColorBufferBlurAttachmentID());
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SSAOLightShader);
+
 		//s_Data.Multisample_FrameBuffer->Unbind();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#if 0
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		s_Data.deferred_lightShader->Bind();
-
-
-		//deferred_Light///////////////////////////////////////////////////////////////////////////
-		//deferred_Light///////////////////////////////////////////////////////////////////////////
-		//deferred_Light///////////////////////////////////////////////////////////////////////////
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
@@ -509,6 +627,15 @@ namespace Opengl {
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			
+
+			// Then calculate radius of light volume/sphere
+			const GLfloat constant = 1.0; // Note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+			const GLfloat linear = 0.7;
+			const GLfloat quadratic = 1.8;
+			const GLfloat maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
+			GLfloat radius = (-linear + std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * maxBrightness))) / (2 * quadratic);
+			s_Data.deferred_lightShader->SetFloat("pointLights[" + std::to_string(i) + "].Radius", radius);
 		}
 
 		// spotLight
@@ -523,10 +650,11 @@ namespace Opengl {
 
 		s_Data.m_DrawScreenQuad->OnDraw(s_Data.deferred_lightShader);
 
+#endif
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
+		//glBlitFramebuffer////////////////////////////////////////////////////////////////
 
-		//glBlitFramebuffer////////////////////////////////////////////////////////////////
-		//glBlitFramebuffer////////////////////////////////////////////////////////////////
-		//glBlitFramebuffer////////////////////////////////////////////////////////////////
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, s_Data.Multisample_FrameBuffer->GetMRTRendererID());
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBlitFramebuffer(0, 0, 1024, 1024, 0, 0, 1024, 1024, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -667,19 +795,21 @@ namespace Opengl {
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
-		glActiveTexture(GL_TEXTURE0);
-		s_Data.cube_Texture->BindCubeTexture();
-		glDepthFunc(GL_LEQUAL);
-		s_Data.SkyboxShader->Bind();
+		{
+			glActiveTexture(GL_TEXTURE0);
+			s_Data.cube_Texture->BindCubeTexture();
+			glDepthFunc(GL_LEQUAL);
+			s_Data.SkyboxShader->Bind();
 
-		glm::mat4 view = glm::mat4(glm::mat3(App::Get().GetCamera().GetViewMatrix()));
-		glm::mat4 projection = App::Get().GetCamera().GetProjection();
-		s_Data.SkyboxShader->SetMat4("view", view);
-		s_Data.SkyboxShader->SetMat4("projection", projection);
+			glm::mat4 view = glm::mat4(glm::mat3(App::Get().GetCamera().GetViewMatrix()));
+			glm::mat4 projection = App::Get().GetCamera().GetProjection();
+			s_Data.SkyboxShader->SetMat4("view", view);
+			s_Data.SkyboxShader->SetMat4("projection", projection);
 
-		s_Data.m_DrawSkybox->OnDraw(s_Data.SkyboxShader);
-		s_Data.SkyboxShader->Bind();
-		glDepthFunc(GL_LESS);
+			s_Data.m_DrawSkybox->OnDraw(s_Data.SkyboxShader);
+			s_Data.SkyboxShader->Bind();
+			glDepthFunc(GL_LESS);
+		}
 
 		//grass///////////////////////////////////////////////////////////////////////////
 		//grass///////////////////////////////////////////////////////////////////////////
@@ -998,5 +1128,42 @@ namespace Opengl {
 			shadowsKeyPressed = false;
 		}
 	}
+
+	void Renderer::SSAOKernel()
+	{
+		// generate sample kernel
+		// ----------------------
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+		std::default_random_engine generator;
+		for (unsigned int i = 0; i < 64; ++i)
+		{
+			glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
+			sample = glm::normalize(sample);
+			sample *= randomFloats(generator);
+			float scale = float(i) / 64.0f;
+
+			// scale samples s.t. they're more aligned to center of kernel
+			scale = ourLerp(0.1f, 1.0f, scale * scale);
+			sample *= scale;
+			s_Data.ssaoKernel.push_back(sample);
+		}
+
+		// generate noise texture
+		// ----------------------
+		for (unsigned int i = 0; i < 16; i++)
+		{
+			glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
+			s_Data.ssaoNoise.push_back(noise);
+		}
+		glGenTextures(1, &noiseTexture);
+		glBindTexture(GL_TEXTURE_2D, noiseTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &s_Data.ssaoNoise[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	}
+
 
 }

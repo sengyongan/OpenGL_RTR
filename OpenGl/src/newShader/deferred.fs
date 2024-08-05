@@ -28,6 +28,8 @@ struct PointLight {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+
+    float Radius;
 };
 //พÛนโ
 struct SpotLight {
@@ -78,8 +80,13 @@ void main()
     //
     vec3 result = CalcDirLight(dirLight, Normal, viewPos);
 
-    for(int i = 0; i < 10; i++)
-        result += CalcPointLight(pointLights[i], Normal, FragPos, viewPos);
+    for(int i = 0; i < 10; i++){
+
+        float distance = length(pointLights[i].position - FragPos);
+        if(distance < pointLights[i].Radius){
+            result += CalcPointLight(pointLights[i], Normal, FragPos, viewPos);
+        }
+    }
 
     result += CalcSpotLight(spotLight, Normal, FragPos, viewPos);   
     

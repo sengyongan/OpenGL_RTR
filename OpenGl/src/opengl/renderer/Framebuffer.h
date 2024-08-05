@@ -56,6 +56,8 @@ namespace Opengl {
         void initDepthCubeAttachment();//深度立方体附件，点阴影
         void InvalidateMRT();//MRT
         void Initpingpong();//pingpong
+        void InitSSAO();//pingpong
+
         //bind ID
         void BindMultisample();
         void BindRendererID();
@@ -65,12 +67,16 @@ namespace Opengl {
         void BindMultisampleTexture();
         void BindTexture();
         //
+        void BindMRTFramebuffer();
+        void BindPingPongFramebuffer(const int index);
+        //
+        void BindSSAOFramebuffer();
+        void BindSSAOBlurFramebuffer();
+        //
         void Unbind();
         //移动buffer
         void BlitFramebuffer();
 
-        void BindMRTFramebuffer();
-        void BindPingPongFramebuffer(const int index);
         //Get
         uint32_t GetMultisampleRendererID() const { return m_MultisampleRendererID; };//获取颜色缓冲附件
 
@@ -89,27 +95,40 @@ namespace Opengl {
         uint32_t GetPingPongRendererID(const int index) const { return pingpongFBO[index]; };//获取颜色缓冲
         uint32_t GetPingPongAttachmentRendererID(const int index) const { return pingpongColorbuffers[index]; };//获取颜色缓冲
         //
+        uint32_t GetSSAOColorBufferAttachmentID() const { return ssaoColorBuffer; };//获取颜色缓冲
+        uint32_t GetSSAOColorBufferBlurAttachmentID() const { return ssaoColorBufferBlur; };//获取颜色缓冲
+
+        //
         const FramebufferSpecification& GetSpecification() const { return m_Specification; };
         //调整size
         void framebuffer_size();
 
     public:
+        //MSAA////////////////////////////////////////////////////////////
         uint32_t m_MultisampleRendererID;//帧缓冲id---多重渲染
         uint32_t m_MultisampleColorAttachment;//附件id
 
+        //普通////////////////////////////////////////////////////////////
         uint32_t m_RendererID;//帧缓冲id---颜色附件
         uint32_t m_ColorAttachment;//附件id
         uint32_t m_DepthAttachment;//附件id
 
+        //点阴影////////////////////////////////////////////////////////////
         uint32_t m_DepthRendererID;//帧缓冲id---深度附件
         uint32_t m_DepthMapAttachment;//深度附件
 
+        //立方体////////////////////////////////////////////////////////////
         uint32_t m_DepthCubeRendererID;//帧缓冲id---深度立方体附件
         uint32_t m_DepthMapCubeAttachment;//深度附件
 
-        unsigned int pingpongFBO[2];
-        unsigned int pingpongColorbuffers[2];
+        //pingpong////////////////////////////////////////////////////////////
+        uint32_t pingpongFBO[2];
+        uint32_t pingpongColorbuffers[2];
+        //SSAO////////////////////////////////////////////////////////////
+        uint32_t ssaoFBO, ssaoBlurFBO;
+        uint32_t ssaoColorBuffer, ssaoColorBufferBlur;
 
+        /////////////////////////////////////////////////////////////////////
         FramebufferSpecification m_Specification;//帧缓冲格式
 
 

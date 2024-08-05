@@ -2,6 +2,7 @@
 #include<glad/glad.h>
 #include"Renderer.h"
 namespace Opengl {
+    bool frist = true;
     namespace Utils//实用工具
     {
         //纹理目标
@@ -28,12 +29,22 @@ namespace Opengl {
                 /////纹理对象分配空间
                 glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
             }
+            else if (frist) {
+                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_FLOAT, nullptr);//为纹理分配Data
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                frist = false;
+            }
             else
             {
                 glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_FLOAT, nullptr);//为纹理分配Data
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
             }
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);////将纹理对象附加到帧缓冲对象的 颜色附件点
         }
@@ -150,6 +161,36 @@ namespace Opengl {
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
                 std::cout << "Framebuffer not complete!" << std::endl;
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    }
+    void Framebuffer::InitSSAO()
+    {
+        // SSAO color buffer
+        glGenFramebuffers(1, &ssaoFBO);  
+        glGenFramebuffers(1, &ssaoBlurFBO);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+        glGenTextures(1, &ssaoColorBuffer);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 1024, 1024, 0, GL_RED, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "SSAO Framebuffer not complete!" << std::endl;
+
+        // and blur stage
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+        glGenTextures(1, &ssaoColorBufferBlur);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 1024, 1024, 0, GL_RED, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     }
@@ -278,6 +319,14 @@ namespace Opengl {
     void Framebuffer::BindTexture()
     {
         glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
+    }
+    void Framebuffer::BindSSAOFramebuffer()
+    {
+        glBindTexture(GL_FRAMEBUFFER, ssaoFBO);
+    }
+    void Framebuffer::BindSSAOBlurFramebuffer()
+    {
+        glBindTexture(GL_FRAMEBUFFER, m_ColorAttachment);
     }
     void Framebuffer::Unbind()
     {
