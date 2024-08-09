@@ -18,6 +18,7 @@
 #include"opengl/draw/DrawPlanet.h"
 #include"opengl/draw/DrawGamma.h"
 #include"opengl/draw/DrawTBNQuad.h"
+#include"opengl/draw/DrawSphere.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -50,6 +51,9 @@ namespace Opengl {
 	{
 		return a + f * (b - a);
 	}
+	int nrRows = 7;
+	int nrColumns = 7;
+	float spacing = 2.5;
 
 	unsigned int noiseTexture;
 
@@ -137,7 +141,14 @@ namespace Opengl {
 		glm::vec3(10.0,  -15.0, -10.0),
 		glm::vec3(10.0,  -15.0, 10.)
 	};
-		
+	//PBR
+	// ------
+	glm::vec3 PBR_lightPositions[] = {
+		glm::vec3(0.0f, 0.0f, 10.0f),
+	};
+	glm::vec3 PBR_lightColors[] = {
+		 glm::vec3(150.0f, 150.0f, 150.0f),
+	};
 	std::vector<glm::vec3> Temp_LightPositions;
 	std::vector<glm::vec3> Temp_LightColors;
 	//RendererData
@@ -160,6 +171,13 @@ namespace Opengl {
 		std::shared_ptr<Texture> window_Texture;
 		std::shared_ptr<Texture> metal_Texture;
 		std::shared_ptr<Texture> metalGamma_Texture;
+		//PBR//////////////////////////////////////////////////
+		std::shared_ptr<Texture> PBR_albedoTexture    ;
+		std::shared_ptr<Texture> PBR_aoTexture1 	  ;
+		std::shared_ptr<Texture> PBR_metallicTexture2 ;
+		std::shared_ptr<Texture> PBR_normallTexture3 	  ;
+		std::shared_ptr<Texture> PBR_roughnessTexture4;
+
 		//skybox///////////////////////////////////////////////////
 		vector<std::string> CubeTexturePath{
 			"../OpenGl/resources/skybox/right.jpg",
@@ -240,6 +258,10 @@ namespace Opengl {
 		std::shared_ptr<Shader> SSAOLightShader;
 		std::vector<glm::vec3> ssaoKernel;
 		std::vector<glm::vec3> ssaoNoise;
+		//PBR///////////////////////////////////////////////////
+		std::shared_ptr<Shader> PBR_Shader;
+		std::shared_ptr<DrawSphere> m_DrawSphere;
+
 	};
 	static RendererData s_Data;
 
@@ -287,6 +309,7 @@ namespace Opengl {
 		s_Data.SAOBlurShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/blur.fs"));
 		s_Data.SSAOLightShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/light.fs"));
 
+		s_Data.PBR_Shader.reset(new Shader("../OpenGl/src/PBR/PBR.vs", "../OpenGl/src/PBR/PBR.fs"));
 		Renderer::SSAOKernel();
 
 		//Texture
@@ -304,6 +327,12 @@ namespace Opengl {
 
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
+
+		s_Data.PBR_albedoTexture  = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_albedo.png");
+		s_Data.PBR_aoTexture1 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_ao.png");
+		s_Data.PBR_metallicTexture2 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_metallic.png");
+		s_Data.PBR_normallTexture3 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_normal-ogl.png");
+		s_Data.PBR_roughnessTexture4 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_roughness.png");
 		//
 		//Framebuffer
 
@@ -344,10 +373,10 @@ namespace Opengl {
 		s_Data.m_DrawPlanet->Bind();
 		s_Data.m_DrawGamma = std::make_unique<DrawGamma>();
 		s_Data.m_DrawGamma->Bind();
-
 		s_Data.m_DrawTBNQuad = std::make_unique<DrawTBNQuad>();
 		s_Data.m_DrawTBNQuad->Bind();
-
+		s_Data.m_DrawSphere = std::make_unique<DrawSphere>();
+		s_Data.m_DrawSphere->Bind();
 		//uniformBuffer//////////////////////////////////////////////////////////
 		//uniformBuffer_BindPoint
 		unsigned int uniformBlockIndex_QuadShader = glGetUniformBlockIndex(s_Data.QuadShader->GetShaderProgram(), "Matrices");
@@ -380,6 +409,8 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.HDRCubeShader->GetShaderProgram(), uniformBlockIndex_HDRCubeShader, 0);
 		unsigned int uniformBlockIndex_G_BufferShader = glGetUniformBlockIndex(s_Data.G_BufferShader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.G_BufferShader->GetShaderProgram(), uniformBlockIndex_G_BufferShader, 0);
+		unsigned int uniformBlockIndex_PBR_Shader = glGetUniformBlockIndex(s_Data.PBR_Shader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.PBR_Shader->GetShaderProgram(), uniformBlockIndex_PBR_Shader, 0);
 
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
@@ -478,6 +509,13 @@ namespace Opengl {
 		s_Data.SAOBlurShader->Bind();
 		s_Data.SAOBlurShader->SetInt("ssaoInput", 0);
 
+		s_Data.PBR_Shader->Bind();
+		s_Data.PBR_Shader->SetInt("albedoMap", 0);
+		s_Data.PBR_Shader->SetInt("normalMap", 1);
+		s_Data.PBR_Shader->SetInt("metallicMap", 2);
+		s_Data.PBR_Shader->SetInt("roughnessMap", 3);
+		s_Data.PBR_Shader->SetInt("aoMap", 4);
+
 	}
 	void Renderer::EndScene()
 	{
@@ -528,14 +566,7 @@ namespace Opengl {
 
 		s_Data.Multisample_FrameBuffer->Unbind();
 
-		//for (unsigned int i = 0; i < objectPositions.size(); i++)
-		//{
-		//	model = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
-		//	model = glm::translate(model, objectPositions[i]);
-		//	s_Data.G_BufferShader->SetMat4("model", model);
-		//	s_Data.G_BufferShader->SetFloat3("camera_Position", App::Get().GetCamera().GetPosition());
-		//	s_Data.m_Model->Draw(s_Data.G_BufferShader);
-		//}
+
 		//SSAO///////////////////////////////////////////////////////////////////////////
 		//SSAO///////////////////////////////////////////////////////////////////////////
 		//SSAO///////////////////////////////////////////////////////////////////////////
@@ -659,7 +690,62 @@ namespace Opengl {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBlitFramebuffer(0, 0, 1024, 1024, 0, 0, 1024, 1024, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
+		//PBR///////////////////////////////////////////////////////////////////////////
+		//PBR///////////////////////////////////////////////////////////////////////////
+		//PBR///////////////////////////////////////////////////////////////////////////
+		s_Data.PBR_Shader->Bind();
+		s_Data.PBR_Shader->SetFloat3("camPos", App::Get().GetCamera().GetPosition());
+		s_Data.PBR_Shader->SetFloat3("albedo", glm::vec3(0.0f, 0.5f, 0.0f));
+		s_Data.PBR_Shader->SetFloat("ao", 1.0f);
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_albedoTexture->GetRendererID());
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_normallTexture3->GetRendererID());
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_metallicTexture2->GetRendererID());
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_roughnessTexture4->GetRendererID());
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_aoTexture1->GetRendererID());
+		//绘制球体，49个
+		for (int row = 0; row < nrRows; ++row)
+		{
+			s_Data.PBR_Shader->SetFloat("metallic", (float)row / (float)nrRows);//金属色，每行的金属度一致（0---1），越往下越是金属
+			for (int col = 0; col < nrColumns; ++col)
+			{
+				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+				// on direct lighting.
+				//粗糙度，每列的粗糙度一致，越往右越粗糙
+				s_Data.PBR_Shader->SetFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+
+				model = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f,0.2f,0.2f));
+				//-8 ---8，间隔为2.5
+				model = glm::translate(model, glm::vec3(
+					(col - (nrColumns / 2)) * spacing * 0.8f,
+					(row - (nrRows / 2)) * spacing * 0.8f
+					,20.0f)
+				);
+				s_Data.PBR_Shader->SetMat4("model", model);
+				s_Data.PBR_Shader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+				s_Data.m_DrawSphere->OnDraw(s_Data.PBR_Shader);
+			}
+		}
+		//绘制灯
+		for (unsigned int i = 0; i < sizeof(PBR_lightPositions) / sizeof(PBR_lightPositions[0]); ++i)
+		{
+			glm::vec3 newPos = PBR_lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+			s_Data.PBR_Shader->SetFloat3("lightPositions[" + std::to_string(i) + "]", PBR_lightPositions[i]);
+			s_Data.PBR_Shader->SetFloat3("lightColors[" + std::to_string(i) + "]", PBR_lightColors[i]);
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, PBR_lightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.5f));
+			s_Data.PBR_Shader->SetMat4("model", model);
+			s_Data.PBR_Shader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+			s_Data.m_DrawSphere->OnDraw(s_Data.PBR_Shader);
+		}
+	
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////

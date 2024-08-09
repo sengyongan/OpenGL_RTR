@@ -165,6 +165,11 @@ namespace Opengl {
 		UploadUniformFloat4(name, value);
 	}
 
+	void Shader::SetMat3(const std::string& name, const glm::mat3& value)
+	{
+		UploadUniformMat3(name, value);
+	}
+
 	void Shader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		UploadUniformMat4(name, value);
