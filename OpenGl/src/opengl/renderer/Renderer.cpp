@@ -131,16 +131,16 @@ namespace Opengl {
 	};
 	vector<glm::vec3> objectPositions{
 		glm::vec3(-10.0, -15.0, -10.0),
-		glm::vec3(-10.0, -15.0, 0.0),
-		glm::vec3(-10.0, -15.0, 10.0),
-						  
-		glm::vec3(0.0,   -15.0, -10.0),
-		glm::vec3(0.0,   -15.0, 0.0),
-		glm::vec3(0.0,   -15.0, 10.0),
-						  
-		glm::vec3(10.0,  -15.0, 0.0),
-		glm::vec3(10.0,  -15.0, -10.0),
-		glm::vec3(10.0,  -15.0, 10.)
+			glm::vec3(-10.0, -15.0, 0.0),
+			glm::vec3(-10.0, -15.0, 10.0),
+
+			glm::vec3(0.0, -15.0, -10.0),
+			glm::vec3(0.0, -15.0, 0.0),
+			glm::vec3(0.0, -15.0, 10.0),
+
+			glm::vec3(10.0, -15.0, 0.0),
+			glm::vec3(10.0, -15.0, -10.0),
+			glm::vec3(10.0, -15.0, 10.)
 	};
 	//PBR
 	// ------
@@ -191,10 +191,10 @@ namespace Opengl {
 		std::shared_ptr<Texture> metal_Texture;
 		std::shared_ptr<Texture> metalGamma_Texture;
 		//PBR//////////////////////////////////////////////////
-		std::shared_ptr<Texture> PBR_albedoTexture    ;
-		std::shared_ptr<Texture> PBR_aoTexture1 	  ;
-		std::shared_ptr<Texture> PBR_metallicTexture2 ;
-		std::shared_ptr<Texture> PBR_normallTexture3 	  ;
+		std::shared_ptr<Texture> PBR_albedoTexture;
+		std::shared_ptr<Texture> PBR_aoTexture1;
+		std::shared_ptr<Texture> PBR_metallicTexture2;
+		std::shared_ptr<Texture> PBR_normallTexture3;
 		std::shared_ptr<Texture> PBR_roughnessTexture4;
 
 		//skybox///////////////////////////////////////////////////
@@ -303,8 +303,7 @@ namespace Opengl {
 		s_Data.uniformBuffer->SetData(glm::value_ptr(ViewProjection), sizeof(glm::mat4), 0);
 
 	}
-	unsigned int envCubemap;
-	unsigned int irradianceMap;
+
 
 	void Renderer::init()
 	{
@@ -364,7 +363,7 @@ namespace Opengl {
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 
-		s_Data.PBR_albedoTexture  = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_albedo.png");
+		s_Data.PBR_albedoTexture = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_albedo.png");
 		s_Data.PBR_aoTexture1 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_ao.png");
 		s_Data.PBR_metallicTexture2 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_metallic.png");
 		s_Data.PBR_normallTexture3 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_normal-ogl.png");
@@ -563,7 +562,7 @@ namespace Opengl {
 		//s_Data.PBR_Shader->SetInt("metallicMap", 2);
 		//s_Data.PBR_Shader->SetInt("roughnessMap", 3);
 		//s_Data.PBR_Shader->SetInt("aoMap", 4);
-#if 0		
+		
 		//LBL////////////////////////////////////////////////////////////////
 		s_Data.LBL_RenderCube->Bind();
 		s_Data.LBL_RenderCube->SetInt("equirectangularMap", 0);
@@ -574,22 +573,22 @@ namespace Opengl {
 		s_Data.LBL_Irradiance->Bind();
 		s_Data.LBL_Irradiance->SetInt("environmentMap", 0);
 
-		//////////////////////////////////////////////////////////////////////
-		  // pbr: setup framebuffer
+		// pbr: setup framebuffer
 	// ----------------------
-		//LBL
-		glDepthFunc(GL_LEQUAL);
 		s_Data.LBL_FrameBuffer = std::make_unique<Framebuffer>();
 		s_Data.LBL_FrameBuffer->InitRender();
 
-		//
+		// pbr: load the HDR environment map
+		// ---------------------------------
+
+		s_Data.LBL_RenderCube->Bind();
+
+		s_Data.LBL_RenderCube->SetMat4("projection", captureProjection);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, s_Data.LBL_HDRTexture->GetRendererID());
 
-		glViewport(0, 0, 512,512);
-		s_Data.LBL_RenderCube->Bind();
-		s_Data.LBL_RenderCube->SetMat4("projection", captureProjection);
-
+		glViewport(0, 0, 512, 512);
+		glBindFramebuffer(GL_FRAMEBUFFER, s_Data.LBL_FrameBuffer->GetLBLendererID());
 		for (unsigned int i = 0; i < 6; ++i) {
 			s_Data.LBL_RenderCube->SetMat4("view", captureViews[i]);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, s_Data.LBL_CubeTexture->GetenvCubeTexture(), 0);
@@ -599,23 +598,20 @@ namespace Opengl {
 
 		/*s_Data.LBL_FrameBuffer->Unbind();*/
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDepthFunc(GL_LESS);
 
 
-		//
 
 		glBindFramebuffer(GL_FRAMEBUFFER, s_Data.LBL_FrameBuffer->GetLBLendererID());
 		glBindRenderbuffer(GL_RENDERBUFFER, s_Data.LBL_FrameBuffer->GetLBLRenderAttachmentendererID());
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512,512);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 
+		s_Data.LBL_Irradiance->Bind();
+		s_Data.LBL_Irradiance->SetMat4("projection", captureProjection);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_CubeTexture->GetenvCubeTexture());
 
-		glViewport(0, 0, 512, 512);
-		//glDepthFunc(GL_LEQUAL);
-		s_Data.LBL_Irradiance->Bind();
-		s_Data.LBL_Irradiance->SetMat4("projection", captureProjection);
-
+		glViewport(0, 0, 32,32);
+		glBindFramebuffer(GL_FRAMEBUFFER, s_Data.LBL_FrameBuffer->GetLBLendererID());
 		for (unsigned int i = 0; i < 6; ++i) {
 
 			s_Data.LBL_Irradiance->SetMat4("view", captureViews[i]);
@@ -624,135 +620,10 @@ namespace Opengl {
 			s_Data.m_DrawNewCube->OnDraw(s_Data.LBL_Irradiance);//渲染立方体，一个摄像机方向，存储到当前绑定到帧缓冲的立方体贴图面
 		}
 
-		//s_Data.LBL_IrradianceFrameBuffer->Unbind();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		//glDepthFunc(GL_LESS);
-
-		glViewport(0, 0, 1024,1024);
-#endif
-		// pbr: setup framebuffer
-	// ----------------------
-		unsigned int captureFBO;
-		unsigned int captureRBO;
-		glGenFramebuffers(1, &captureFBO);
-		glGenRenderbuffers(1, &captureRBO);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
-
-		// pbr: load the HDR environment map
-		// ---------------------------------
-		stbi_set_flip_vertically_on_load(true);
-		int width, height, nrComponents;
-		float* data = stbi_loadf("../OpenGl/resources/textures/HDR/newport_loft.hdr", &width, &height, &nrComponents, 0);
-		unsigned int hdrTexture;
-		if (data)
-		{
-			glGenTextures(1, &hdrTexture);
-			glBindTexture(GL_TEXTURE_2D, hdrTexture);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Failed to load HDR image." << std::endl;
-		}
-
-		// pbr: setup cubemap to render to and attach to framebuffer
-		// ---------------------------------------------------------
-		glGenTextures(1, &envCubemap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
-		// ----------------------------------------------------------------------------------------------
-		glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-		glm::mat4 captureViews[] =
-		{
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-		};
-
-		// pbr: convert HDR equirectangular environment map to cubemap equivalent
-		// ----------------------------------------------------------------------
-		s_Data.LBL_RenderCube->Bind();
-
-		s_Data.LBL_RenderCube->SetMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTexture);
-
-		glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
-		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			s_Data.LBL_RenderCube->SetMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			s_Data.m_DrawNewCube->OnDraw(s_Data.LBL_RenderCube);//渲染立方体，一个摄像机方向，存储到当前绑定到帧缓冲的立方体贴图面
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		// pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
-		// --------------------------------------------------------------------------------
-		glGenTextures(1, &irradianceMap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
-
-		// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
-		// -----------------------------------------------------------------------------
-		s_Data.LBL_Irradiance->Bind();
-		s_Data.LBL_Irradiance->SetMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-
-		glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
-		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			s_Data.LBL_Irradiance->SetMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			s_Data.m_DrawNewCube->OnDraw(s_Data.LBL_Irradiance);//渲染立方体，一个摄像机方向，存储到当前绑定到帧缓冲的立方体贴图面
-		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-		glViewport(0, 0, 1024,1024);
+		glViewport(0, 0, 1024, 1024);
 	}
 	void Renderer::EndScene()
 	{
@@ -782,9 +653,9 @@ namespace Opengl {
 		s_Data.G_BufferSSAOShader->SetMat4("projection", projection);
 		s_Data.G_BufferSSAOShader->SetMat4("view", view);
 		model = glm::scale(model, glm::vec3(0.3f));
-		model = glm::rotate(model, glm::radians(-90.0f),glm::vec3(0.0, 1.0, 0.0)) 
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0))
 			* glm::rotate(glm::mat4(1.0f),
-			glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+				glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 		model = glm::translate(model, glm::vec3(0.0f, -10.0f, -12.0));
 		s_Data.G_BufferSSAOShader->SetMat4("model", model);
 		s_Data.G_BufferSSAOShader->SetInt("invertedNormals", 0);
@@ -792,7 +663,7 @@ namespace Opengl {
 
 
 		s_Data.G_BufferCubeSSAOShader->Bind();
-		model = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f,0.1f,3.0f));
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f, 0.1f, 3.0f));
 		model = glm::translate(model, glm::vec3(0.0f, -40.0f, 0.0));
 		s_Data.G_BufferCubeSSAOShader->SetMat4("projection", projection);
 		s_Data.G_BufferCubeSSAOShader->SetMat4("view", view);
@@ -810,9 +681,9 @@ namespace Opengl {
 		s_Data.Multisample_FrameBuffer->BindSSAOFramebuffer();
 		glClear(GL_COLOR_BUFFER_BIT);
 		s_Data.SAOShader->Bind();
-		
+
 		for (unsigned int i = 0; i < 64; ++i) {
-		
+
 			s_Data.SAOShader->SetFloat3("samples[" + std::to_string(i) + "]", s_Data.ssaoKernel[i]);
 		}
 		s_Data.SAOShader->SetMat4("projection", projection);
@@ -843,7 +714,7 @@ namespace Opengl {
 		s_Data.SSAOLightShader->Bind();
 		glm::vec3 lightPosView = glm::vec3(view * glm::vec4(2.0, 4.0, -2.0, 1.0));
 		s_Data.SSAOLightShader->SetFloat3("light.Position", lightPosView);
-		s_Data.SSAOLightShader->SetFloat3("light.Color", glm::vec3(0.7f,0.7f,1.0f));
+		s_Data.SSAOLightShader->SetFloat3("light.Color", glm::vec3(0.7f, 0.7f, 1.0f));
 		// Update attenuation parameters
 		const float linear = 0.09f;
 		const float quadratic = 0.032f;
@@ -895,7 +766,7 @@ namespace Opengl {
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
 			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-			
+
 
 			// Then calculate radius of light volume/sphere
 			const GLfloat constant = 1.0; // Note that we don't send this to the shader, we assume it is always 1.0 (in our case)
@@ -931,13 +802,13 @@ namespace Opengl {
 		//Cube///////////////////////////////////////////////////////////////////////////
 		//Cube///////////////////////////////////////////////////////////////////////////
 
-		
+
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
 		s_Data.PBR_Shader->Bind();
 		s_Data.PBR_Shader->SetFloat3("camPos", App::Get().GetCamera().GetPosition());
-		s_Data.PBR_Shader->SetFloat3("albedo", glm::vec3 (0.0f, 0.5f, 0.0f));
+		s_Data.PBR_Shader->SetFloat3("albedo", glm::vec3(0.0f, 0.5f, 0.0f));
 		s_Data.PBR_Shader->SetFloat("ao", 1.0f);
 
 		//glActiveTexture(GL_TEXTURE0);
@@ -952,7 +823,7 @@ namespace Opengl {
 		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_aoTexture1->GetRendererID());
 		//绘制球体，49个
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_IrradianceTextureCube->GetenvCubeTexture());
 
 		for (int row = 0; row < nrRows; ++row)
 		{
@@ -967,9 +838,9 @@ namespace Opengl {
 				//model = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f,0.2f,0.2f));
 				//-8 ---8，间隔为2.5
 				model = glm::translate(glm::mat4(1.0f), glm::vec3(
-					(float)(col - (nrColumns / 2)) * spacing ,
+					(float)(col - (nrColumns / 2)) * spacing,
 					(float)(row - (nrRows / 2)) * spacing + 20.0f
-					,2.0f)
+					, 2.0f)
 				);
 				s_Data.PBR_Shader->SetMat4("model", model);
 				s_Data.PBR_Shader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
@@ -1145,7 +1016,7 @@ namespace Opengl {
 		}
 		{
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_CubeTexture->GetenvCubeTexture());
 			glDepthFunc(GL_LEQUAL);
 			s_Data.LBL_Sky->Bind();
 			glm::mat4 view = App::Get().GetCamera().GetViewMatrix();
