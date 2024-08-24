@@ -87,6 +87,11 @@ namespace Opengl {
                 m_DepthAttachmentSpecification = spec;
         }
     }
+
+    Framebuffer::Framebuffer()
+    {
+    }
+
     Framebuffer::~Framebuffer()
     {
         //glDeleteFramebuffers(1, &m_MultisampleRendererID);
@@ -193,6 +198,16 @@ namespace Opengl {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    }
+    void Framebuffer::InitRender()
+    {
+        glGenFramebuffers(1, &captureFBO);
+        glGenRenderbuffers(1, &captureRBO);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
     }
     void Framebuffer::initMultisampleAttachment()
     {

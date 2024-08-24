@@ -17,6 +17,7 @@ namespace Opengl {
         uint32_t GetHeight() const  { return m_Height; }
         uint32_t GetRendererID() const  { return m_RendererID; }
         unsigned int GetCubeTexture() const  { return m_CubeTextureID; }
+        uint32_t GetenvCubeTexture() const  { return envCubemapTextureID; }
 
         const string& GetPath() const  { return m_Path; }
 
@@ -29,6 +30,9 @@ namespace Opengl {
 
         static unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false) ;//创建模型纹理
         unsigned int loadCubemap(vector<std::string> path);//创建立方体贴图
+        void loadHDRMap(const string& path);//
+
+        uint32_t Cubemap(const int& Witdth,const int& Height);//创建立方体贴图
         
 
 
@@ -40,6 +44,9 @@ namespace Opengl {
         uint32_t m_Width, m_Height;
         uint32_t m_RendererID;
         uint32_t m_CubeTextureID;
+
+        //立方体贴图
+        uint32_t envCubemapTextureID;
 
         GLenum  m_DataFormat;//格式
 

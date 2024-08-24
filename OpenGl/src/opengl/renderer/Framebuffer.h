@@ -7,14 +7,12 @@ namespace Opengl {
     {
         None = 0,
 
-        // Color//颜色
-        RGBA16F,
-        RGBA,//红色整形
+        // Color
+        RGBA16F,//浮点
+        RGBA,//普通
 
         // Depth/stencil//深度/模板
         DEPTH24STENCIL8,
-
-        // Defaults
         Depth = DEPTH24STENCIL8//depth的默认值
     };
 
@@ -47,6 +45,7 @@ namespace Opengl {
     class Framebuffer {
     public:
         Framebuffer(const FramebufferSpecification& spec);
+        Framebuffer();
         ~Framebuffer();
 
         //init
@@ -57,6 +56,7 @@ namespace Opengl {
         void InvalidateMRT();//MRT
         void Initpingpong();//pingpong
         void InitSSAO();//pingpong
+        void InitRender();//渲染对象附件
 
         //bind ID
         void BindMultisample();
@@ -98,6 +98,8 @@ namespace Opengl {
         uint32_t GetSSAOColorBufferAttachmentID() const { return ssaoColorBuffer; };//获取颜色缓冲
         uint32_t GetSSAOColorBufferBlurAttachmentID() const { return ssaoColorBufferBlur; };//获取颜色缓冲
 
+        uint32_t GetLBLendererID() const { return captureFBO; };//
+        uint32_t GetLBLRenderAttachmentendererID() const { return captureRBO; };//
         //
         const FramebufferSpecification& GetSpecification() const { return m_Specification; };
         //调整size
@@ -127,6 +129,10 @@ namespace Opengl {
         //SSAO////////////////////////////////////////////////////////////
         uint32_t ssaoFBO, ssaoBlurFBO;
         uint32_t ssaoColorBuffer, ssaoColorBufferBlur;
+
+        //LBL////////////////////////////////////////////////////////////
+        uint32_t captureFBO;
+        uint32_t captureRBO;
 
         /////////////////////////////////////////////////////////////////////
         FramebufferSpecification m_Specification;//帧缓冲格式

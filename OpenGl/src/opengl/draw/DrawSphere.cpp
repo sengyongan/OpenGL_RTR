@@ -104,10 +104,10 @@ namespace Opengl {
 	{
         glBindVertexArray(s_SphereData.sphereVAO);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 设置为线框模式
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 设置为线框模式
 
-        glDrawElements(GL_LINES, s_SphereData.indexCount, GL_UNSIGNED_INT, 0); //
-        //glDrawElements(GL_TRIANGLE_STRIP, s_SphereData.indexCount, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_LINES, s_SphereData.indexCount, GL_UNSIGNED_INT, 0); //
+        glDrawElements(GL_TRIANGLE_STRIP, s_SphereData.indexCount, GL_UNSIGNED_INT, 0);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 恢复到填充模式
 	}
 }

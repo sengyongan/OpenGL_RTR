@@ -1374,6 +1374,7 @@
     <ClInclude Include="src\opengl\draw\DrawGamma.h" />
     <ClInclude Include="src\opengl\draw\DrawTBNQuad.h" />
     <ClInclude Include="src\opengl\draw\DrawSphere.h" />
+    <ClInclude Include="src\opengl\draw\DrawNewCube.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1442,5 +1443,6 @@
     <ClCompile Include="src\opengl\draw\DrawGamma.cpp" />
     <ClCompile Include="src\opengl\draw\DrawTBNQuad.cpp" />
     <ClCompile Include="src\opengl\draw\DrawSphere.cpp" />
+    <ClCompile Include="src\opengl\draw\DrawNewCube.cpp" />
   </ItemGroup>
 </Project>
