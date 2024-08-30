@@ -190,4 +190,38 @@ namespace Opengl {
 
 		return envCubemapTextureID;
 	}
+	uint32_t Texture::MipmapCubemap()
+	{
+		glGenTextures(1, &prefilterMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear 
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);//·ÖÅä×ã¹»ÄÚ´æ
+		return prefilterMap;
+	}
+	uint32_t Texture::BRDFLUTMap()
+	{
+		// pbr: generate a 2D LUT from the BRDF equations used.
+		// ----------------------------------------------------
+		glGenTextures(1, &brdfLUTTexture);
+
+		// pre-allocate enough memory for the LUT texture.
+		glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
+		// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		return brdfLUTTexture;
+
+	}
 }
