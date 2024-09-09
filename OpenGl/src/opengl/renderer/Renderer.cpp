@@ -297,7 +297,10 @@ namespace Opengl {
 		std::shared_ptr<Texture> LBL_IrradianceSpecularTextureCube;
 		std::shared_ptr<Texture> LBL_BRDFTexture;
 		std::shared_ptr<Shader> LBL_BRDF;
-
+		//PBR_Model////////////////////////////////////////////
+		std::shared_ptr<Model> Gun_Model;
+		std::shared_ptr<Shader> LBL_ModelShader;
+		std::shared_ptr<Texture> BackpackAOTexture;
 
 	};
 	static RendererData s_Data;
@@ -352,6 +355,7 @@ namespace Opengl {
 		s_Data.LBL_IrradianceSpecular.reset(new Shader("../OpenGl/src/LBL/CubeMap.vs", "../OpenGl/src/LBL/IrradianceSpecular.fs"));
 		s_Data.LBL_BRDF.reset(new Shader("../OpenGl/src/LBL/BRDF.vs", "../OpenGl/src/LBL/BRDF.fs"));
 
+		s_Data.LBL_ModelShader.reset(new Shader("../OpenGl/src/PBR/ModelPBR.vs", "../OpenGl/src/PBR/ModelPBR.fs"));
 		Renderer::SSAOKernel();
 
 		//Texture
@@ -370,14 +374,16 @@ namespace Opengl {
 		s_Data.cube_Texture = std::make_unique<Texture>();
 		s_Data.cube_Texture->loadCubemap(s_Data.CubeTexturePath);
 
-		s_Data.PBR_albedoTexture  = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_albedo.png");
-		s_Data.PBR_aoTexture1 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_ao.png");
-		s_Data.PBR_metallicTexture2 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_metallic.png");
-		s_Data.PBR_normallTexture3 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_normal-ogl.png");
-		s_Data.PBR_roughnessTexture4 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/columned-lava-rock_roughness.png");
+		s_Data.PBR_albedoTexture  = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_albedo.png");
+		s_Data.PBR_aoTexture1 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_ao.png");
+		s_Data.PBR_metallicTexture2 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_metallic.png");
+		s_Data.PBR_normallTexture3 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_normal-ogl.png");
+		s_Data.PBR_roughnessTexture4 = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_roughness.png");
 		//
 		s_Data.LBL_HDRTexture = std::make_unique<Texture>();
 		s_Data.LBL_HDRTexture->loadHDRMap("../OpenGl/resources/textures/HDR/newport_loft.hdr");
+
+		s_Data.BackpackAOTexture = std::make_unique<Texture>("../OpenGl/resources/textures/PBR/ornate-brass_roughness.png");
 
 		s_Data.LBL_CubeTexture = std::make_unique<Texture>();
 		s_Data.LBL_CubeTexture->Cubemap(512, 512);
@@ -398,13 +404,14 @@ namespace Opengl {
 
 		//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
+		//s_Data.Gun_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/gun/Cerberus_LP.FBX");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/cyborg/cyborg.obj");
-		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
+		s_Data.Gun_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/backpack/backpack.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/planet/planet.obj");
 		//s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/vampire/vampire.obj");
 
 
-		//init
+		//init  DrawCall
 		s_Data.m_DrawCube = std::make_unique<DrawCube>();
 		s_Data.m_DrawCube->Bind();
 		s_Data.m_DrawPointLight = std::make_unique<DrawPointLight>();
@@ -467,6 +474,8 @@ namespace Opengl {
 		glUniformBlockBinding(s_Data.G_BufferShader->GetShaderProgram(), uniformBlockIndex_G_BufferShader, 0);
 		unsigned int uniformBlockIndex_PBR_Shader = glGetUniformBlockIndex(s_Data.PBR_Shader->GetShaderProgram(), "Matrices");
 		glUniformBlockBinding(s_Data.PBR_Shader->GetShaderProgram(), uniformBlockIndex_PBR_Shader, 0);
+		unsigned int uniformBlockIndex_LBL_ModelShader = glGetUniformBlockIndex(s_Data.LBL_ModelShader->GetShaderProgram(), "Matrices");
+		glUniformBlockBinding(s_Data.LBL_ModelShader->GetShaderProgram(), uniformBlockIndex_LBL_ModelShader, 0);
 
 		s_Data.uniformBuffer = std::make_unique<Uniform>(sizeof(glm::mat4), 0);
 
@@ -570,13 +579,18 @@ namespace Opengl {
 		s_Data.PBR_Shader->SetInt("irradianceMap", 0);
 		s_Data.PBR_Shader->SetInt("prefilterMap", 1);
 		s_Data.PBR_Shader->SetInt("brdfLUT", 2);
-		//s_Data.PBR_Shader->SetInt("albedoMap", 0);
-		//s_Data.PBR_Shader->SetInt("normalMap", 1);
-		//s_Data.PBR_Shader->SetInt("metallicMap", 2);
-		//s_Data.PBR_Shader->SetInt("roughnessMap", 3);
-		//s_Data.PBR_Shader->SetInt("aoMap", 4);
 
+		s_Data.PBR_Shader->SetInt("albedoMap", 3);
+		s_Data.PBR_Shader->SetInt("normalMap", 4);
+		s_Data.PBR_Shader->SetInt("metallicMap", 5);
+		s_Data.PBR_Shader->SetInt("roughnessMap", 6);
+		s_Data.PBR_Shader->SetInt("aoMap", 7);
 
+		s_Data.LBL_ModelShader->Bind();
+		s_Data.LBL_ModelShader->SetInt("irradianceMap", 4);
+		s_Data.LBL_ModelShader->SetInt("prefilterMap", 5);
+		s_Data.LBL_ModelShader->SetInt("brdfLUT", 6);
+		s_Data.LBL_ModelShader->SetInt("aoMap", 7);
 		//PBR预计算贴图//////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// pbr: setup framebuffer
 		s_Data.LBL_FrameBuffer = std::make_unique<Framebuffer>();
@@ -848,11 +862,49 @@ namespace Opengl {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBlitFramebuffer(0, 0, 1024, 1024, 0, 0, 1024, 1024, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-		//Cube///////////////////////////////////////////////////////////////////////////
-		//Cube///////////////////////////////////////////////////////////////////////////
-		//Cube///////////////////////////////////////////////////////////////////////////
+		//PBR_Model///////////////////////////////////////////////////////////////////////////
+		//PBR_Model///////////////////////////////////////////////////////////////////////////
+		//PBR_Model///////////////////////////////////////////////////////////////////////////
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_IrradianceTextureCube->GetenvCubeTexture());
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_IrradianceSpecularTextureCube->GetMipmapCubeTexture());
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, s_Data.LBL_BRDFTexture->GetBRDFTexture());
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, s_Data.BackpackAOTexture->GetRendererID());
 
-		
+		s_Data.LBL_ModelShader->Bind();
+		s_Data.LBL_ModelShader->SetFloat3("camPos", App::Get().GetCamera().GetPosition());
+		s_Data.LBL_ModelShader->SetFloat3("albedo", glm::vec3(0.0f, 0.5f, 0.0f));
+		//s_Data.LBL_ModelShader->SetFloat("ao", 1.0f);
+
+		//
+		model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-10.0f, 25.0f, 0.0f));
+		s_Data.LBL_ModelShader->SetMat4("model", model);
+		s_Data.LBL_ModelShader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+		s_Data.Gun_Model->Draw(s_Data.LBL_ModelShader);
+
+
+		//绘制灯
+		for (unsigned int i = 0; i < sizeof(PBR_lightPositions) / sizeof(PBR_lightPositions[0]); ++i)
+		{
+			glm::vec3 newPos = PBR_lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+			//newPos = PBR_lightPositions[i];
+			s_Data.LBL_ModelShader->SetFloat3("lightPositions[" + std::to_string(i) + "]", newPos);
+			s_Data.LBL_ModelShader->SetFloat3("lightColors[" + std::to_string(i) + "]", PBR_lightColors[i]);
+
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, newPos);
+			model = glm::scale(model, glm::vec3(0.5f));
+			s_Data.LBL_ModelShader->SetMat4("model", model);
+			s_Data.LBL_ModelShader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+		}
+
+
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
@@ -861,16 +913,6 @@ namespace Opengl {
 		s_Data.PBR_Shader->SetFloat3("albedo", glm::vec3 (0.0f, 0.5f, 0.0f));
 		s_Data.PBR_Shader->SetFloat("ao", 1.0f);
 
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_albedoTexture->GetRendererID());
-		//glActiveTexture(GL_TEXTURE1);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_normallTexture3->GetRendererID());
-		//glActiveTexture(GL_TEXTURE2);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_metallicTexture2->GetRendererID());
-		//glActiveTexture(GL_TEXTURE3);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_roughnessTexture4->GetRendererID());
-		//glActiveTexture(GL_TEXTURE4);
-		//glBindTexture(GL_TEXTURE_2D, s_Data.PBR_aoTexture1->GetRendererID());
 		//绘制球体，49个
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_IrradianceTextureCube->GetenvCubeTexture());
@@ -878,6 +920,18 @@ namespace Opengl {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, s_Data.LBL_IrradianceSpecularTextureCube->GetMipmapCubeTexture());
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, s_Data.LBL_BRDFTexture->GetBRDFTexture());
+
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_albedoTexture->GetRendererID()); 
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_normallTexture3->GetRendererID());
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_metallicTexture2->GetRendererID());
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_roughnessTexture4->GetRendererID());
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, s_Data.PBR_aoTexture1->GetRendererID());
 
 		for (int row = 0; row < nrRows; ++row)
 		{
@@ -1128,7 +1182,7 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
-
+		///人物模型
 		s_Data.PlanetShader->Bind();
 
 		//

@@ -17,7 +17,7 @@ namespace Opengl {
 
     EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
         : m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip),
-          m_ProMatrix(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip))
+        m_ProMatrix(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip))
     {
         glfwSetScrollCallback(App::Get().GetWindow().GetNativeWindow(), MouseScrolledEvent);
         UpdateView();
@@ -75,7 +75,7 @@ namespace Opengl {
             const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };//获取鼠标相对于窗口位置
             glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;//计算鼠标移动距离（求差），在2D屏幕上
             m_InitialMousePosition = mouse;//上一次的位置
-            
+
             //
             if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))//鼠标中间平移（//速度根据视口大小&&距离改变）
                 MousePan(delta);
@@ -91,9 +91,9 @@ namespace Opengl {
         auto [xSpeed, ySpeed] = PanSpeed();//获取平移速度
 
         if (Input::IsKeyPressed(GLFW_KEY_W))
-            m_FocalPoint +=  GetUpDirection() * cameraSpeed * xSpeed * m_Distance;//标量*向量，再用向量m_FocalPoint + 移动向量
+            m_FocalPoint += GetUpDirection() * cameraSpeed * xSpeed * m_Distance;//标量*向量，再用向量m_FocalPoint + 移动向量
         if (Input::IsKeyPressed(GLFW_KEY_S))
-            m_FocalPoint -=  GetUpDirection() * cameraSpeed * xSpeed * m_Distance;
+            m_FocalPoint -= GetUpDirection() * cameraSpeed * xSpeed * m_Distance;
         if (Input::IsKeyPressed(GLFW_KEY_A))
             m_FocalPoint -= GetRightDirection() * cameraSpeed * ySpeed * m_Distance;//点乘，正规化为-1——1
         if (Input::IsKeyPressed(GLFW_KEY_D))
@@ -124,7 +124,7 @@ namespace Opengl {
     {
         //float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;//决定旋转方向
         m_Pitch += delta.y * RotationSpeed();//鼠标上移差值为负，想要相机局部坐标向上旋转，向上是负值
-        m_Yaw +=  delta.x * RotationSpeed();//鼠标右移差值为正，想要相机局部坐标向右旋转，向右是正数
+        m_Yaw += delta.x * RotationSpeed();//鼠标右移差值为正，想要相机局部坐标向右旋转，向右是正数
         //std::cout << m_Pitch << m_Yaw <<std::endl;
         //std::cout << m_Yaw << std::endl;
 
@@ -141,7 +141,7 @@ namespace Opengl {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     glm::vec3 EditorCamera::GetUpDirection() const//返回形式vec3(0.0, -m_Yaw，0.0）
     {
         return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
