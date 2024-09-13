@@ -54,10 +54,16 @@
     <ClInclude Include="src\opengl\core\App.h">
       <Filter>src\opengl\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\opengl\core\Debug.h">
+      <Filter>src\opengl\core</Filter>
+    </ClInclude>
     <ClInclude Include="src\opengl\core\EditorCamera.h">
       <Filter>src\opengl\core</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\core\Input.h">
+      <Filter>src\opengl\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\core\TextRendering.h">
       <Filter>src\opengl\core</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\core\Window.h">
@@ -70,6 +76,18 @@
       <Filter>src\opengl\core</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\draw\DrawCube.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawGamma.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawGeometry.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawNewCube.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawPlanet.h">
       <Filter>src\opengl\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\draw\DrawPoint.h">
@@ -85,6 +103,12 @@
       <Filter>src\opengl\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\draw\DrawSkybox.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawSphere.h">
+      <Filter>src\opengl\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\draw\DrawTBNQuad.h">
       <Filter>src\opengl\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\draw\DrawTriangles.h">
@@ -115,6 +139,9 @@
       <Filter>src\opengl\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\renderer\Texture.h">
+      <Filter>src\opengl\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opengl\renderer\Uniform.h">
       <Filter>src\opengl\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\opengl\renderer\VertexArray.h">
@@ -1368,13 +1395,6 @@
     <ClInclude Include="vendor\glm\glm\vector_relational.hpp">
       <Filter>vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\opengl\renderer\Uniform.h" />
-    <ClInclude Include="src\opengl\draw\DrawGeometry.h" />
-    <ClInclude Include="src\opengl\draw\DrawPlanet.h" />
-    <ClInclude Include="src\opengl\draw\DrawGamma.h" />
-    <ClInclude Include="src\opengl\draw\DrawTBNQuad.h" />
-    <ClInclude Include="src\opengl\draw\DrawSphere.h" />
-    <ClInclude Include="src\opengl\draw\DrawNewCube.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp">
@@ -1383,16 +1403,34 @@
     <ClCompile Include="src\opengl\core\App.cpp">
       <Filter>src\opengl\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\opengl\core\Debug.cpp">
+      <Filter>src\opengl\core</Filter>
+    </ClCompile>
     <ClCompile Include="src\opengl\core\EditorCamera.cpp">
       <Filter>src\opengl\core</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\core\Input.cpp">
       <Filter>src\opengl\core</Filter>
     </ClCompile>
+    <ClCompile Include="src\opengl\core\TextRendering.cpp">
+      <Filter>src\opengl\core</Filter>
+    </ClCompile>
     <ClCompile Include="src\opengl\core\Window.cpp">
       <Filter>src\opengl\core</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\draw\DrawCube.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawGamma.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawGeometry.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawNewCube.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawPlanet.cpp">
       <Filter>src\opengl\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\draw\DrawPoint.cpp">
@@ -1408,6 +1446,12 @@
       <Filter>src\opengl\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\draw\DrawSkybox.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawSphere.cpp">
+      <Filter>src\opengl\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opengl\draw\DrawTBNQuad.cpp">
       <Filter>src\opengl\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\draw\DrawTriangles.cpp">
@@ -1431,18 +1475,14 @@
     <ClCompile Include="src\opengl\renderer\Texture.cpp">
       <Filter>src\opengl\renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\opengl\renderer\Uniform.cpp">
+      <Filter>src\opengl\renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\opengl\renderer\VertexArray.cpp">
       <Filter>src\opengl\renderer</Filter>
     </ClCompile>
     <ClCompile Include="vendor\glad\src\glad.c">
       <Filter>vendor\glad\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\opengl\renderer\Uniform.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawGeometry.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawPlanet.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawGamma.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawTBNQuad.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawSphere.cpp" />
-    <ClCompile Include="src\opengl\draw\DrawNewCube.cpp" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 //‰÷»æ
 #include"VertexArray.h"
 #include"opengl/core/EditorCamera.h"
+#include"opengl/core/Debug.h"
 
 #include <string>
 #include <glm/glm.hpp>

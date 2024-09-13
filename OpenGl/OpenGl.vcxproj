@@ -59,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;vendor\freetype\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -69,8 +69,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;freetype.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\freetype\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Debug-windows-x86_64\OpenGl\OpenGl.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
@@ -82,7 +82,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>vendor\OpenGL\includes;vendor\OpenGL\lib;vendor\glm;vendor\glad\include;vendor\stb_image;vendor\assimp\include;vendor\freetype\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -96,8 +96,8 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;freetype.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>vendor\OpenGL\lib;vendor\freetype\lib;vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\bin\Release-windows-x86_64\OpenGl\OpenGl.lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
@@ -108,8 +108,10 @@
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="src\include.h" />
     <ClInclude Include="src\opengl\core\App.h" />
+    <ClInclude Include="src\opengl\core\Debug.h" />
     <ClInclude Include="src\opengl\core\EditorCamera.h" />
     <ClInclude Include="src\opengl\core\Input.h" />
+    <ClInclude Include="src\opengl\core\TextRendering.h" />
     <ClInclude Include="src\opengl\core\Window.h" />
     <ClInclude Include="src\opengl\core\core.h" />
     <ClInclude Include="src\opengl\core\main.h" />
@@ -557,8 +559,10 @@
   <ItemGroup>
     <ClCompile Include="src\hzpch.cpp" />
     <ClCompile Include="src\opengl\core\App.cpp" />
+    <ClCompile Include="src\opengl\core\Debug.cpp" />
     <ClCompile Include="src\opengl\core\EditorCamera.cpp" />
     <ClCompile Include="src\opengl\core\Input.cpp" />
+    <ClCompile Include="src\opengl\core\TextRendering.cpp" />
     <ClCompile Include="src\opengl\core\Window.cpp" />
     <ClCompile Include="src\opengl\draw\DrawCube.cpp" />
     <ClCompile Include="src\opengl\draw\DrawGamma.cpp" />

@@ -22,7 +22,7 @@ project "OpenGl"--项目
     targetdir ("bin/".. outputdir .."/%{prj.name}")--相对premake路径
     objdir ("bin-int/".. outputdir .."/%{prj.name}")--..是连接两个字符串的操作符
     
-    files--项目包含的文件
+    files--项目中的源文件和头文件
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
@@ -31,7 +31,7 @@ project "OpenGl"--项目
 		"%{prj.name}/vendor/glad/src/glad.c"
     }
     
-    includedirs
+    includedirs--在编译时需要搜索的头文件目录
     {
         "%{prj.name}/vendor/OpenGL/includes",
         "%{prj.name}/vendor/OpenGL/lib",
@@ -39,19 +39,21 @@ project "OpenGl"--项目
         "%{prj.name}/vendor/glad/include",
         "%{prj.name}/vendor/stb_image",
         "%{prj.name}/vendor/assimp/include",
+        "%{prj.name}/vendor/freetype/include",
         "OpenGL/src"
     }
 
-    libdirs
+    libdirs--链接器在链接时搜索库文件的目录
     {
         "OpenGL/vendor/OpenGL/lib",
+        "OpenGL/vendor/freetype/lib",
         "OpenGL/vendor/assimp/lib"
     }
 
-    links 
+    links --列出了实际要链接的库文件名
 	{ 
         "glfw3",
-		"opengl32.lib",
+        "freetype",
 		"assimp-vc143-mtd.lib"
 	}
     --Windows --------------------------------
@@ -99,12 +101,14 @@ project "engine"--项目
         "OpenGL/vendor/glm",
         "OpenGL/vendor/Glad/include",
         "OpenGL/vendor/assimp/include",
+        "%{prj.name}/vendor/freetype/include",
         "OpenGL/src"
     }
 
     libdirs
     {
         "OpenGL/vendor/OpenGL/lib",
+        "%{prj.name}/vendor/freetype/include",
         "OpenGL/vendor/assimp/lib" 
     }
 

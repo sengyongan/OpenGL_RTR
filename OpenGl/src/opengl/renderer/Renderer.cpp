@@ -4,6 +4,7 @@
 #include"Texture.h"
 #include"opengl/draw/Model.h"
 #include"opengl/core/App.h"
+#include"opengl/core/TextRendering.h"
 #include"Framebuffer.h"
 #include"Uniform.h"
 //
@@ -301,6 +302,10 @@ namespace Opengl {
 		std::shared_ptr<Model> Gun_Model;
 		std::shared_ptr<Shader> LBL_ModelShader;
 		std::shared_ptr<Texture> BackpackAOTexture;
+		//Fonts////////////////////////////////////////////
+		std::shared_ptr<Shader> FontsShader;
+		std::shared_ptr<TextRendering> TextRendering;
+
 
 	};
 	static RendererData s_Data;
@@ -316,46 +321,48 @@ namespace Opengl {
 	void Renderer::init()
 	{
 		//Shader
-		s_Data.QuadShader.reset(new Shader("../OpenGl/src/shader/quad_Vertex_Shader.glsl", "../OpenGl/src/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
-		s_Data.TrianglesShader.reset(new Shader("../OpenGl/src/shader/triangles_Vertex_Shader.glsl", "../OpenGl/src/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
-		s_Data.CubeShader.reset(new Shader("../OpenGl/src/shader/multiple_lights.vs_glsl", "../OpenGl/src/shader/multiple_lights.fs_glsl"));
-		s_Data.PointLightShader.reset(new Shader("../OpenGl/src/shader/pointLight_Vertex_Shader.glsl", "../OpenGl/src/shader/pointLight_Fragment_Shader.glsl"));
-		s_Data.PointShader.reset(new Shader("../OpenGl/src/shader/point_Vertex_Shader.glsl", "../OpenGl/src/shader/point_Fragment_Shader.glsl"));
-		s_Data.ModelShader.reset(new Shader("../OpenGl/src/shader/model_Vertex_Shader.glsl", "../OpenGl/src/shader/model_Fragment_Shader.glsl"));
-		s_Data.ModelNormalShader.reset(new Shader("../OpenGl/src/shader/modelNormal_Vertex_Shader.glsl", "../OpenGl/src/shader/modelNormal_Fragment_Shader.glsl"
-			, "../OpenGl/src/shader/modelNormal_geometry_Shader.glsl"));
-		s_Data.SceneShader.reset(new Shader("../OpenGl/src/shader/screen_Vertex_Shader.glsl", "../OpenGl/src/shader/screen_Fragment_Shader.glsl"));
-		s_Data.SkyboxShader.reset(new Shader("../OpenGl/src/shader/skybox_Vertex_Shader.glsl", "../OpenGl/src/shader/skybox_Fragment_Shader.glsl"));
-		s_Data.GeometryShader.reset(new Shader("../OpenGl/src/shader/geometry_Vertex_Shader.glsl", "../OpenGl/src/shader/geometry_Fragment_Shader.glsl",
-			"../OpenGl/src/shader/geometry_geometry_Shader.glsl"));
-		s_Data.PlanetShader.reset(new Shader("../OpenGl/src/shader/model.vs", "../OpenGl/src/shader/model.fs"));
-		s_Data.RockShader.reset(new Shader("../OpenGl/src/shader/Instance.vs", "../OpenGl/src/shader/Instance.fs"));
-		s_Data.GammaShader.reset(new Shader("../OpenGl/src/newShader/gamma.vs", "../OpenGl/src/newShader/gamma.fs"));
-		s_Data.ShadowShader.reset(new Shader("../OpenGl/src/newShader/ShadowMap.vs", "../OpenGl/src/newShader/ShadowMap.fs"));
-		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/src/newShader/PointShadowMap.vs", "../OpenGl/src/newShader/PointShadowMap.fs", "../OpenGl/src/newShader/PointShadowMap.gs"));
-		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/src/shader/point_Shadow.vs", "../OpenGl/src/shader/point_Shadow.fs"));
-		s_Data.TBNQuadShader.reset(new Shader("../OpenGl/src/newShader/TBNquad.vs", "../OpenGl/src/newShader/TBNquad.fs"));
-		s_Data.HDRShader.reset(new Shader("../OpenGl/src/newShader/HDR.vs", "../OpenGl/src/newShader/HDR.fs"));
-		s_Data.HDRCubeShader.reset(new Shader("../OpenGl/src/newShader/HDRCube.vs", "../OpenGl/src/newShader/HDRCube.fs"));
-		s_Data.PingPongShader.reset(new Shader("../OpenGl/src/newShader/PingPong.vs", "../OpenGl/src/newShader/PingPong.fs"));
+		s_Data.QuadShader.reset(new Shader("../OpenGl/resources/Shader/shader/quad_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/quad_Fragment_Shader.glsl"));//设置智能指针指向的对象
+		s_Data.TrianglesShader.reset(new Shader("../OpenGl/resources/Shader/shader/triangles_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/triangles_Fragment_Shader.glsl"));//设置智能指针指向的对象
+		s_Data.CubeShader.reset(new Shader("../OpenGl/resources/Shader/shader/multiple_lights.vs_glsl", "../OpenGl/resources/Shader/shader/multiple_lights.fs_glsl"));
+		s_Data.PointLightShader.reset(new Shader("../OpenGl/resources/Shader/shader/pointLight_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/pointLight_Fragment_Shader.glsl"));
+		s_Data.PointShader.reset(new Shader("../OpenGl/resources/Shader/shader/point_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/point_Fragment_Shader.glsl"));
+		s_Data.ModelShader.reset(new Shader("../OpenGl/resources/Shader/shader/model_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/model_Fragment_Shader.glsl"));
+		s_Data.ModelNormalShader.reset(new Shader("../OpenGl/resources/Shader/shader/modelNormal_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/modelNormal_Fragment_Shader.glsl"
+			, "../OpenGl/resources/Shader/shader/modelNormal_geometry_Shader.glsl"));
+		s_Data.SceneShader.reset(new Shader("../OpenGl/resources/Shader/shader/screen_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/screen_Fragment_Shader.glsl"));
+		s_Data.SkyboxShader.reset(new Shader("../OpenGl/resources/Shader/shader/skybox_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/skybox_Fragment_Shader.glsl"));
+		s_Data.GeometryShader.reset(new Shader("../OpenGl/resources/Shader/shader/geometry_Vertex_Shader.glsl", "../OpenGl/resources/Shader/shader/geometry_Fragment_Shader.glsl",
+			"../OpenGl/resources/Shader/shader/geometry_geometry_Shader.glsl"));
+		s_Data.PlanetShader.reset(new Shader("../OpenGl/resources/Shader/shader/model.vs", "../OpenGl/resources/Shader/shader/model.fs"));
+		s_Data.RockShader.reset(new Shader("../OpenGl/resources/Shader/shader/Instance.vs", "../OpenGl/resources/Shader/shader/Instance.fs"));
+		s_Data.GammaShader.reset(new Shader("../OpenGl/resources/Shader/newShader/gamma.vs", "../OpenGl/resources/Shader/newShader/gamma.fs"));
+		s_Data.ShadowShader.reset(new Shader("../OpenGl/resources/Shader/newShader/ShadowMap.vs", "../OpenGl/resources/Shader/newShader/ShadowMap.fs"));
+		s_Data.Point_ShadowMapShader.reset(new Shader("../OpenGl/resources/Shader/newShader/PointShadowMap.vs", "../OpenGl/resources/Shader/newShader/PointShadowMap.fs", "../OpenGl/resources/Shader/newShader/PointShadowMap.gs"));
+		s_Data.Point_ShadowShader.reset(new Shader("../OpenGl/resources/Shader/shader/point_Shadow.vs", "../OpenGl/resources/Shader/shader/point_Shadow.fs"));
+		s_Data.TBNQuadShader.reset(new Shader("../OpenGl/resources/Shader/newShader/TBNquad.vs", "../OpenGl/resources/Shader/newShader/TBNquad.fs"));
+		s_Data.HDRShader.reset(new Shader("../OpenGl/resources/Shader/newShader/HDR.vs", "../OpenGl/resources/Shader/newShader/HDR.fs"));
+		s_Data.HDRCubeShader.reset(new Shader("../OpenGl/resources/Shader/newShader/HDRCube.vs", "../OpenGl/resources/Shader/newShader/HDRCube.fs"));
+		s_Data.PingPongShader.reset(new Shader("../OpenGl/resources/Shader/newShader/PingPong.vs", "../OpenGl/resources/Shader/newShader/PingPong.fs"));
 
-		s_Data.G_BufferShader.reset(new Shader("../OpenGl/src/newShader/g_ModelShader.vs", "../OpenGl/src/newShader/g_ModelShader.fs"));
-		s_Data.deferred_lightShader.reset(new Shader("../OpenGl/src/newShader/deferred.vs", "../OpenGl/src/newShader/deferred.fs"));
-		//s_Data.MRTShader.reset(new Shader("../OpenGl/src/newShader/MRT.vs", "../OpenGl/src/newShader/MRT.fs"));
-		s_Data.G_BufferSSAOShader.reset(new Shader("../OpenGl/src/SSAO/G_Buffer.vs", "../OpenGl/src/SSAO/G_Buffer.fs"));
-		s_Data.G_BufferCubeSSAOShader.reset(new Shader("../OpenGl/src/SSAO/G_CubeBuffer.vs", "../OpenGl/src/SSAO/G_Buffer.fs"));
-		s_Data.SAOShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/ssao.fs"));
-		s_Data.SAOBlurShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/blur.fs"));
-		s_Data.SSAOLightShader.reset(new Shader("../OpenGl/src/SSAO/ssao.vs", "../OpenGl/src/SSAO/light.fs"));
-		s_Data.PBR_Shader.reset(new Shader("../OpenGl/src/PBR/PBR.vs", "../OpenGl/src/PBR/PBR.fs"));
+		s_Data.G_BufferShader.reset(new Shader("../OpenGl/resources/Shader/newShader/g_ModelShader.vs", "../OpenGl/resources/Shader/newShader/g_ModelShader.fs"));
+		s_Data.deferred_lightShader.reset(new Shader("../OpenGl/resources/Shader/newShader/deferred.vs", "../OpenGl/resources/Shader/newShader/deferred.fs"));
+		//s_Data.MRTShader.reset(new Shader("../OpenGl/resources/Shader/newShader/MRT.vs", "../OpenGl/resources/Shader/newShader/MRT.fs"));
+		s_Data.G_BufferSSAOShader.reset(new Shader("../OpenGl/resources/Shader/SSAO/G_Buffer.vs", "../OpenGl/resources/Shader/SSAO/G_Buffer.fs"));
+		s_Data.G_BufferCubeSSAOShader.reset(new Shader("../OpenGl/resources/Shader/SSAO/G_CubeBuffer.vs", "../OpenGl/resources/Shader/SSAO/G_Buffer.fs"));
+		s_Data.SAOShader.reset(new Shader("../OpenGl/resources/Shader/SSAO/ssao.vs", "../OpenGl/resources/Shader/SSAO/ssao.fs"));
+		s_Data.SAOBlurShader.reset(new Shader("../OpenGl/resources/Shader/SSAO/ssao.vs", "../OpenGl/resources/Shader/SSAO/blur.fs"));
+		s_Data.SSAOLightShader.reset(new Shader("../OpenGl/resources/Shader/SSAO/ssao.vs", "../OpenGl/resources/Shader/SSAO/light.fs"));
+		s_Data.PBR_Shader.reset(new Shader("../OpenGl/resources/Shader/PBR/PBR.vs", "../OpenGl/resources/Shader/PBR/PBR.fs"));
 
-		s_Data.LBL_RenderCube.reset(new Shader("../OpenGl/src/LBL/CubeMap.vs", "../OpenGl/src/LBL/equirectangularMap.fs"));
-		s_Data.LBL_Sky.reset(new Shader("../OpenGl/src/LBL/sky.vs", "../OpenGl/src/LBL/sky.fs"));
-		s_Data.LBL_Irradiance.reset(new Shader("../OpenGl/src/LBL/CubeMap.vs", "../OpenGl/src/LBL/Irradiance.fs"));
-		s_Data.LBL_IrradianceSpecular.reset(new Shader("../OpenGl/src/LBL/CubeMap.vs", "../OpenGl/src/LBL/IrradianceSpecular.fs"));
-		s_Data.LBL_BRDF.reset(new Shader("../OpenGl/src/LBL/BRDF.vs", "../OpenGl/src/LBL/BRDF.fs"));
+		s_Data.LBL_RenderCube.reset(new Shader("../OpenGl/resources/Shader/LBL/CubeMap.vs", "../OpenGl/resources/Shader/LBL/equirectangularMap.fs"));
+		s_Data.LBL_Sky.reset(new Shader("../OpenGl/resources/Shader/LBL/sky.vs", "../OpenGl/resources/Shader/LBL/sky.fs"));
+		s_Data.LBL_Irradiance.reset(new Shader("../OpenGl/resources/Shader/LBL/CubeMap.vs", "../OpenGl/resources/Shader/LBL/Irradiance.fs"));
+		s_Data.LBL_IrradianceSpecular.reset(new Shader("../OpenGl/resources/Shader/LBL/CubeMap.vs", "../OpenGl/resources/Shader/LBL/IrradianceSpecular.fs"));
+		s_Data.LBL_BRDF.reset(new Shader("../OpenGl/resources/Shader/LBL/BRDF.vs", "../OpenGl/resources/Shader/LBL/BRDF.fs"));
 
-		s_Data.LBL_ModelShader.reset(new Shader("../OpenGl/src/PBR/ModelPBR.vs", "../OpenGl/src/PBR/ModelPBR.fs"));
+		s_Data.LBL_ModelShader.reset(new Shader("../OpenGl/resources/Shader/PBR/ModelPBR.vs", "../OpenGl/resources/Shader/PBR/ModelPBR.fs"));
+
+		s_Data.FontsShader.reset(new Shader("../OpenGl/resources/Shader/Fonts/fonts.vert", "../OpenGl/resources/Shader/Fonts/fonts.frag"));
 		Renderer::SSAOKernel();
 
 		//Texture
@@ -401,6 +408,11 @@ namespace Opengl {
 		s_Data.Multisample_FrameBuffer->InvalidateMRT();
 		s_Data.Multisample_FrameBuffer->InitSSAO();
 
+		s_Data.TextRendering = std::make_unique<TextRendering>();
+		s_Data.TextRendering->init();
+		s_Data.FontsShader->Bind();
+		glm::mat4 projection = glm::ortho(0.0f, 1024.0f, 0.0f, 1024.0f);
+		s_Data.FontsShader->SetMat4("projection", projection);
 
 		//Model
 		s_Data.m_Model = std::make_unique<Model>("D:/OpenGL_C++_Demo/OpenGl_Demo/OpenGl/resources/objects/nanosuit/nanosuit.obj");
@@ -691,9 +703,10 @@ namespace Opengl {
 	}
 	void Renderer::EndScene()
 	{
-
+		glCheckError();
 		//input
 		processInput(App::Get().GetWindow().GetNativeWindow());
+		//std::cout << glGetError() << std::endl;
 		//init
 		Renderer::Clear();//需要放在这个位置，清除自己的帧缓冲
 		//
@@ -702,8 +715,10 @@ namespace Opengl {
 		float timeValue = glfwGetTime();
 		float GreenValue = (sin(timeValue) / 2.0f) + 0.5f;//sin值变为（-1——1），/2+0.5-》0——1
 		glm::vec4 result = glm::vec4(0.0f, GreenValue, 0.0f, 1.0f);
-
-
+		glCheckError();
+		/// <summary>
+		///平躺人物模型 ： SSAO + 延迟渲染
+		/// </summary>
 		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
 		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
 		//G_FrameBuffer///////////////////////////////////////////////////////////////////////////
@@ -738,7 +753,7 @@ namespace Opengl {
 
 		s_Data.Multisample_FrameBuffer->Unbind();
 
-
+		glCheckError();
 		//SSAO///////////////////////////////////////////////////////////////////////////
 		//SSAO///////////////////////////////////////////////////////////////////////////
 		//SSAO///////////////////////////////////////////////////////////////////////////
@@ -760,6 +775,7 @@ namespace Opengl {
 		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SAOShader);
 
 		s_Data.Multisample_FrameBuffer->Unbind();
+		glCheckError();
 		//Blur///////////////////////////////////////////////////////////////////////////
 		//Blur///////////////////////////////////////////////////////////////////////////
 		//Blur///////////////////////////////////////////////////////////////////////////
@@ -771,6 +787,7 @@ namespace Opengl {
 		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SAOBlurShader);
 
 		s_Data.Multisample_FrameBuffer->Unbind();
+		glCheckError();
 		//deferred_Light///////////////////////////////////////////////////////////////////////////
 		//deferred_Light///////////////////////////////////////////////////////////////////////////
 		//deferred_Light///////////////////////////////////////////////////////////////////////////ss
@@ -795,65 +812,9 @@ namespace Opengl {
 		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SSAOLightShader);
 
 		//s_Data.Multisample_FrameBuffer->Unbind();
-#if 0
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		s_Data.deferred_lightShader->Bind();
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(0));
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1));
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(2));
-
-		//
-		s_Data.deferred_lightShader->SetFloat("shininess", 32.0f);
-		//
-		s_Data.deferred_lightShader->SetFloat3("constVal.camera_Position", App::Get().GetCamera().GetPosition());
-		s_Data.deferred_lightShader->SetFloat3("constVal.camera_Direction", App::Get().GetCamera().GetForwardDirection());
-		s_Data.deferred_lightShader->SetFloat("constVal.constant", 1.0f);
-		s_Data.deferred_lightShader->SetFloat("constVal.linear", 0.09f);
-		s_Data.deferred_lightShader->SetFloat("constVal.quadratic", 0.032f);
-		//
-
-		// directional light
-		s_Data.deferred_lightShader->SetFloat3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		s_Data.deferred_lightShader->SetFloat3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		s_Data.deferred_lightShader->SetFloat3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		s_Data.deferred_lightShader->SetFloat3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-
-		// point light 1
-		for (int i = 0; i < 10; i++) {
-			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].position", pointLightPositions[i]);
-			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].color", s_Data.lightColors[i]);
-
-			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-			s_Data.deferred_lightShader->SetFloat3("pointLights[" + std::to_string(i) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-			
-
-			// Then calculate radius of light volume/sphere
-			const GLfloat constant = 1.0; // Note that we don't send this to the shader, we assume it is always 1.0 (in our case)
-			const GLfloat linear = 0.7;
-			const GLfloat quadratic = 1.8;
-			const GLfloat maxBrightness = std::fmaxf(std::fmaxf(lightColors[i].r, lightColors[i].g), lightColors[i].b);
-			GLfloat radius = (-linear + std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * maxBrightness))) / (2 * quadratic);
-			s_Data.deferred_lightShader->SetFloat("pointLights[" + std::to_string(i) + "].Radius", radius);
-		}
-
-		// spotLight
-
-		s_Data.deferred_lightShader->SetFloat3("spotLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-		s_Data.deferred_lightShader->SetFloat3("spotLight.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		s_Data.deferred_lightShader->SetFloat3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		s_Data.deferred_lightShader->SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		s_Data.deferred_lightShader->SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+		glCheckError();
 
 
-		s_Data.m_DrawScreenQuad->OnDraw(s_Data.deferred_lightShader);
-
-#endif
 		//glBlitFramebuffer////////////////////////////////////////////////////////////////
 		//glBlitFramebuffer////////////////////////////////////////////////////////////////
 		//glBlitFramebuffer////////////////////////////////////////////////////////////////
@@ -862,6 +823,7 @@ namespace Opengl {
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBlitFramebuffer(0, 0, 1024, 1024, 0, 0, 1024, 1024, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
+		///PBR球体
 		//PBR_Model///////////////////////////////////////////////////////////////////////////
 		//PBR_Model///////////////////////////////////////////////////////////////////////////
 		//PBR_Model///////////////////////////////////////////////////////////////////////////
@@ -904,7 +866,8 @@ namespace Opengl {
 			s_Data.LBL_ModelShader->SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
 		}
 
-
+		glCheckError();
+		///PBR背包
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
 		//PBR///////////////////////////////////////////////////////////////////////////
@@ -971,7 +934,8 @@ namespace Opengl {
 			s_Data.m_DrawSphere->OnDraw(s_Data.PBR_Shader);
 		}
 
-
+		glCheckError();
+		///Gamma校正，平面和光
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
 		//Gamma///////////////////////////////////////////////////////////////////////////
@@ -987,6 +951,7 @@ namespace Opengl {
 		s_Data.GammaShader->SetMat4("model", model);
 		s_Data.m_DrawGamma->OnDraw(s_Data.GammaShader);
 
+		///凹凸贴图，中心旋转立方体
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
 		//TBN_Quad_BrickWall///////////////////////////////////////////////////////////////////////////
@@ -1005,7 +970,8 @@ namespace Opengl {
 		s_Data.brickWall_Depth_Texture->Bind();
 		s_Data.m_DrawTBNQuad->OnDraw(s_Data.TBNQuadShader);
 
-
+		glCheckError();
+		///几何，平面房子
 		//geometry///////////////////////////////////////////////////////////////////////////
 		//geometry///////////////////////////////////////////////////////////////////////////
 		//geometry///////////////////////////////////////////////////////////////////////////
@@ -1018,7 +984,7 @@ namespace Opengl {
 		//instance///////////////////////////////////////////////////////////////////////////
 		//instance///////////////////////////////////////////////////////////////////////////
 		//instance///////////////////////////////////////////////////////////////////////////
-		///Planet
+		///行星，实例化
 		glActiveTexture(GL_TEXTURE2);
 		s_Data.cube_Texture->BindCubeTexture();
 
@@ -1104,6 +1070,9 @@ namespace Opengl {
 
 		//s_Data.m_DrawPlanet->OnDrawRock(s_Data.RockShader);
 		s_Data.m_DrawPlanet->OnDrawRock(s_Data.RockShader);
+
+		glCheckError();
+		///天空盒
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
 		//skybox///////////////////////////////////////////////////////////////////////////
@@ -1134,6 +1103,7 @@ namespace Opengl {
 			s_Data.m_DrawNewCube->OnDraw(s_Data.LBL_Sky);
 			glDepthFunc(GL_LESS);
 		}
+		///草，混合
 		//grass///////////////////////////////////////////////////////////////////////////
 		//grass///////////////////////////////////////////////////////////////////////////
 		//grass///////////////////////////////////////////////////////////////////////////
@@ -1153,6 +1123,7 @@ namespace Opengl {
 		// -----------------------------------------------
 		Renderer::DrawScene();
 
+		///光源
 		//Renderer_Scene
 		// pointLight//////////////////////////////////////////////////////////////////////////////
 		// pointLight//////////////////////////////////////////////////////////////////////////////
@@ -1168,7 +1139,7 @@ namespace Opengl {
 			s_Data.m_DrawPointLight->OnDraw(s_Data.PointLightShader);
 
 		}
-
+		///线框
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
 		// point /Line  //////////////////////////////////////////////////////////////////////////////
@@ -1182,7 +1153,7 @@ namespace Opengl {
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
 		//modle//////////////////////////////////////////////////////////////////////////////////
-		///人物模型
+		///人物模型，法线，凹凸贴图
 		s_Data.PlanetShader->Bind();
 
 		//
@@ -1229,7 +1200,8 @@ namespace Opengl {
 
 		s_Data.m_Model->Draw(s_Data.PlanetShader);
 
-
+		glCheckError();
+		///窗户，混合
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
 		//window///////////////////////////////////////////////////////////////////////////
@@ -1253,7 +1225,26 @@ namespace Opengl {
 		}
 		s_Data.QuadShader->Unbind();
 		glDisable(GL_BLEND);
-		//pingpong//////////////////////////////////////////////////////////////////////////////
+
+		glCheckError();
+
+
+		//FBO——WIN//////////////////////////////////////////////////////////////////////////////		
+		//FBO——WIN//////////////////////////////////////////////////////////////////////////////
+		//FBO——WIN//////////////////////////////////////////////////////////////////////////////
+		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(1024 / 4 * 3, 1024 / 4 * 3, 1024 / 4, 1024 / 4);
+		glDisable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, s_Data.Multisample_FrameBuffer->GetMRTAttachmentRendererID(1));
+		s_Data.SceneShader->Bind();
+		s_Data.m_DrawScreenQuad->Bind();
+
+		s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+
+		glEnable(GL_DEPTH_TEST);
+		glViewport(0, 0, 1024, 1024);
+		// //pingpong//////////////////////////////////////////////////////////////////////////////
 		//pingpong//////////////////////////////////////////////////////////////////////////////
 		//pingpong//////////////////////////////////////////////////////////////////////////////
 		//
@@ -1274,7 +1265,6 @@ namespace Opengl {
 		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//LUT//////////////////////////////////////////////////////////////////////////////
 		//LUT//////////////////////////////////////////////////////////////////////////////
-		//LUT//////////////////////////////////////////////////////////////////////////////
 		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		//glClear(GL_COLOR_BUFFER_BIT);
 		//glDisable(GL_DEPTH_TEST);
@@ -1283,6 +1273,13 @@ namespace Opengl {
 		//s_Data.m_DrawScreenQuad->Bind();
 
 		//s_Data.m_DrawScreenQuad->OnDraw(s_Data.SceneShader);
+		//Fonts//////////////////////////////////////////////////////////////////////////////	
+		//Fonts//////////////////////////////////////////////////////////////////////////////
+		//Fonts//////////////////////////////////////////////////////////////////////////////
+		s_Data.FontsShader->Bind();
+		s_Data.TextRendering->RenderText(*s_Data.FontsShader, "This is SenLongAn's project", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+		s_Data.TextRendering->RenderText(*s_Data.FontsShader, "Hello World!", 800.0f, 700.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+
 	}
 	void Renderer::SetClearColor(const glm::vec4& color)
 	{
@@ -1307,6 +1304,8 @@ namespace Opengl {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+		glCheckError();
 
 	}
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray)
@@ -1432,7 +1431,7 @@ namespace Opengl {
 			s_Data.m_DrawCube->OnDraw(s_Data.Point_ShadowShader);
 		}
 
-
+		glCheckError();
 	}
 
 	void Renderer::processInput(GLFWwindow* window)
