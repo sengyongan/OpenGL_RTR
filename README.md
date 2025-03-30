@@ -1,2 +1,1 @@
-# OpenGL_C-_Demo
-new OpenGL Renderer Engine
+学习LearnOpenGL，将所有章节汇总，将代码封装，使用openglAPI的实时渲染项目
